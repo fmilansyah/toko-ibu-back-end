@@ -1,0 +1,5 @@
+{
+    "require": {
+        "odenktools/php-bca": "^2.3"
+    }
+}

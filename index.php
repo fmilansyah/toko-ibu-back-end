@@ -1,23 +1,26 @@
 <?php
-$data = [
-    [
-        'illustration' => 'https://i.imgur.com/UYiroysl.jpg',
-    ],
-    [
-        'illustration' => 'https://i.imgur.com/UPrs1EWl.jpg',
-    ],
-    [
-        'illustration' => 'https://i.imgur.com/MABUbpDl.jpg',
-    ],
-    [
-        'illustration' => 'https://i.imgur.com/KZsmUi2l.jpg',
-    ],
-    [
-        'illustration' => 'https://i.imgur.com/2nCt3Sbl.jpg',
-    ],
-    [
-        'illustration' => 'https://i.imgur.com/lceHsT6l.jpg',
-    ],
-];
-header('Content-Type: application/json; charset=utf-8');
-echo json_encode($data);
+header("Access-Control-Allow-Headers: token, Access-Control-Allow-Headers, api-key, client-id, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method,Access-Control-Request-Headers, Authorization, Access-Control-Allow-Methods, Access-Control-Allow-Origin");
+header('Access-Control-Allow-Origin: *');
+header("Access-Control-Allow-Methods: HEAD, GET, POST, PUT, PATCH, DELETE, OPTIONS");
+header('Content-Type: application/json');
+$method = $_SERVER['REQUEST_METHOD'];
+if ($method == "OPTIONS") {
+    header("Access-Control-Allow-Headers: token, Access-Control-Allow-Headers, api-key, client-id, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method,Access-Control-Request-Headers, Authorization, Access-Control-Allow-Methods, Access-Control-Allow-Origin");
+    header('Access-Control-Allow-Origin: *');
+    header("Access-Control-Allow-Methods: HEAD, GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    header("HTTP/1.1 200 OK");
+    die();
+}
+
+require_once __DIR__ . '/core/flight/Flight.php';
+require_once __DIR__ . '/api.php';
+// ini_set('memory_limit', '-1');
+
+Flight::route('GET /getdatabarang', 'getDataBarang');
+Flight::route('POST /getdetailbarang', 'getDetailBarang');
+Flight::route('POST /tambahdatabarang', 'tambahDataBarang');
+Flight::route('POST /ubahdatabarang', 'ubahDataBarang');
+Flight::route('POST /deletedatabarang', 'deleteDataBarang');
+
+Flight::start();
+?>
