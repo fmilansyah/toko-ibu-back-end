@@ -16,11 +16,23 @@ require_once __DIR__ . '/core/flight/Flight.php';
 require_once __DIR__ . '/api.php';
 // ini_set('memory_limit', '-1');
 
+// ------------------ BARANG
 Flight::route('GET /getdatabarang', 'getDataBarang');
 Flight::route('POST /getdetailbarang', 'getDetailBarang');
 Flight::route('POST /tambahdatabarang', 'tambahDataBarang');
 Flight::route('POST /ubahdatabarang', 'ubahDataBarang');
 Flight::route('POST /deletedatabarang', 'deleteDataBarang');
+
+// ------------------ KATEGORI
+Flight::route('GET /getkategori', 'getKategori');
+Flight::route('POST /tambahkategori', 'tambahKategori');
+Flight::route('POST /ubahkategori', 'ubahKategori');
+Flight::route('POST /deletekategori', 'deleteKategori');
+
+// ------------------ KATEGORI BARANG
+Flight::route('POST /getkategoribarang', 'getKategoriBarang');
+Flight::route('POST /setkategoribarang', 'setKategoriBarang');
+
 
 Flight::start();
 ?>

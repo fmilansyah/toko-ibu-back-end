@@ -20,6 +20,24 @@ function getDataBarang(){
     echo getDataBarangSQL();
 }
 
+function getKategori(){
+    echo getKategoriSQL();
+}
+
+function setKategoriBarang(){
+    if (isset($_POST['kategori_barang'], $_POST['hapus_kategori_barang'])) {
+        
+        $kategori_barang = json_decode($_POST['kategori_barang'], true);
+        $hapus_kategori_barang = json_decode($_POST['hapus_kategori_barang'], true);
+
+        echo setKategoriBarangSQL($kategori_barang, $hapus_kategori_barang);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
 function tambahDataBarang(){
     if (isset($_POST['kd_barang'], $_POST['nama'], $_POST['ukuran'])) {
         $kd_barang = htmlspecialchars($_POST['kd_barang']);
@@ -32,6 +50,20 @@ function tambahDataBarang(){
         }
 
         echo tambahDataBarangSQL($kd_barang, $nama, $ukuran, $listFile);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function tambahKategori(){
+    if (isset($_POST['kd_kategori'], $_POST['nama'], $_POST['keterangan'])) {
+        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
+        $nama = htmlspecialchars($_POST['nama']);
+        $keterangan = htmlspecialchars($_POST['keterangan']);
+        
+        echo tambahKategoriSQL($kd_kategori, $nama, $keterangan);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -60,10 +92,47 @@ function ubahDataBarang(){
     }
 }
 
+function ubahKategori(){
+    if (isset($_POST['kd_kategori'], $_POST['nama'], $_POST['keterangan'])) {
+        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
+        $nama = htmlspecialchars($_POST['nama']);
+        $keterangan = htmlspecialchars($_POST['keterangan']);
+        
+        echo ubahKategoriSQL($kd_kategori, $nama, $keterangan);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+
 function deleteDataBarang(){
     if (isset($_POST['kd_barang'])) {
         $kd_barang = htmlspecialchars($_POST['kd_barang']);
         echo deleteDataBarangSQL($kd_barang);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function deleteKategori(){
+    if (isset($_POST['kd_kategori'])) {
+        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
+        echo deleteKategoriSQL($kd_kategori);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function getKategoriBarang(){
+    if (isset($_POST['kd_kategori'])) {
+        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
+        echo getKategoriBarangSQL($kd_kategori);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";

@@ -45,6 +45,91 @@ function getDataBarangSQL(){
     }
 }
 
+function getKategoriSQL(){
+    $sql = "SELECT * FROM kategori ORDER BY createdAt DESC";
+    $result = coreReturnArray($sql, null);
+
+    if (sizeof($result) > 0) {
+        $response['Error'] = 0;
+        $response['Kategori'] = $result;
+        $response['Message'] = 'Data Berhasil Ditemukan!';
+        return json_encode($response);
+    }else{
+        $response['Error'] = 1;
+        $response['Message'] = 'Data Tidak Ditemukan!';
+        return json_encode($response);
+    }
+}
+
+function getKategoriBarangSQL($kd_kategori){
+    $sql = "SELECT b.* FROM barang b 
+                INNER JOIN kategori_barang kb ON b.kd_barang=kb.kd_barang AND kb.kd_kategori=:kd_kategori
+                ORDER BY b.created_at DESC";
+    $result = coreReturnArray($sql, array(":kd_kategori" => $kd_kategori));
+
+    if (sizeof($result) > 0) {
+        $response['Error'] = 0;
+        $response['KategoriBarang'] = $result;
+        $response['Message'] = 'Data Berhasil Ditemukan!';
+        return json_encode($response);
+    }
+    else{
+        $response['Error'] = 1;
+        $response['Message'] = 'Data Tidak Ditemukan!';
+        return json_encode($response);
+    }
+}
+
+function setKategoriBarangSQL($kategori_barang, $hapus_kategori_barang){
+
+    $JKB = sizeof($kategori_barang);
+    if($JKB > 0 ){
+        $CJKB = 0;
+        foreach ($kategori_barang as $key => $data) {
+            $sql = "INSERT INTO `kategori_barang`(`kd_kategori`, `kd_barang`) 
+                            VALUES (:kd_kategori, :kd_barang)
+                            ON DUPLICATE KEY 
+                            UPDATE `kd_kategori`= :kd_kategori2, `kd_barang`= :kd_barang2";
+    
+            $result = coreNoReturn($sql, array(
+                                            ":kd_kategori" => $data['kd_kategori'], 
+                                            ":kd_kategori2" => $data['kd_kategori'], 
+                                            ":kd_barang" => $data['kd_barang'], 
+                                            ":kd_barang2" => $data['kd_barang'], 
+            ));
+            if ($result['success'] == 1) {
+                $CJKB++;
+            }
+        }
+        if($JKB == $CJKB){
+            $response['MessageKategoriBarang'] = 'Data Berhasil Disimpan!';
+        }else{
+            $response['MessageKategoriBarang'] = 'Data Gagal Disimpan!';
+        }
+    }
+    
+
+    $JHKB = sizeof($hapus_kategori_barang);
+    if($JHKB > 0){
+        $CHJKB = 0;
+        foreach ($hapus_kategori_barang as $key => $data2) {
+            $sql = "DELETE FROM `kategori_barang` WHERE `kd_kategori`=:kd_kategori AND kd_barang=:kd_barang";
+            $result = coreNoReturn($sql, array(":kd_kategori"=>$data2['kd_kategori'], ":kd_barang"=>$data2['kd_barang']));
+            if ($result['success'] == 1) {
+                $CHJKB++;
+            }
+        }
+        
+        if($JHKB == $CHJKB){
+            $response['MessageHapusKategoriBarang'] = 'Data Berhasil Dihapus!';
+        }else{
+            $response['MessageHapusKategoriBarang'] = 'Data Gagal Dihapus!';
+        }
+    }
+
+    return json_encode($response);
+}
+
 function getDetailBarangSQL($kd_barang){
     $detail_barang = "SELECT * FROM `detail_barang` WHERE kd_barang=:kd_barang ORDER BY created_at DESC";
     $result_detail_barang = coreReturnArray($detail_barang, array(":kd_barang" => $kd_barang));
@@ -74,6 +159,21 @@ function getDetailBarangSQL($kd_barang){
 
 function hilangSimbol($name){
     return str_replace(['!','@','#','$','%','^','&','*',' ', "'"],"",$name);
+}
+
+function tambahKategoriSQL($kd_kategori, $nama, $keterangan){
+    $sql = "INSERT INTO kategori(kd_kategori, nama, keterangan) VALUES(:kd_kategori, :nama, :keterangan)";
+    $result = coreNoReturn($sql, array(":kd_kategori" => $kd_kategori, ":nama" => $nama, ":keterangan" => $keterangan));
+
+    if ($result['success'] == 1) {
+        $response['Error'] = 0;
+        $response['Message'] = "Berhasil Menambahkan Kategori!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Menambahkan Kategori!";
+        return json_encode($response);
+    }
 }
 
 function tambahDataBarangSQL($kd_barang, $nama, $ukuran, $listFile){
@@ -153,6 +253,21 @@ function tambahDataBarangSQL($kd_barang, $nama, $ukuran, $listFile){
     } else {
         $response['Error'] = 1;
         $response['Message'] = "Gagal Menambahkan Barang!";
+        return json_encode($response);
+    }
+}
+
+function ubahKategoriSQL($kd_kategori, $nama, $keterangan){
+    $sql = "UPDATE `kategori` SET `nama`=:nama, `keterangan`=:keterangan  WHERE `kd_kategori`=:kd_kategori";
+    $result = coreNoReturn($sql, array(":kd_kategori"=>$kd_kategori, ":nama"=>$nama, ":keterangan"=>$keterangan));
+
+    if ($result['success'] == 1) {
+        $response['Error'] = 0;
+        $response['Message'] = "Berhasil Mengubah Kategori!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Mengubah Kategori!";
         return json_encode($response);
     }
 }
@@ -279,6 +394,31 @@ function deleteDataBarangSQL($kd_barang){
     if ($result['success'] == 1) {
         $response['Error'] = 0;
         $response['Message'] = "Berhasil Menghapus Data!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Menghapus Data!";
+        return json_encode($response);
+    }
+}
+
+function deleteKategoriSQL($kd_kategori){
+
+    $sql = "DELETE FROM `kategori_barang` WHERE `kd_kategori`=:kd_kategori";
+    $result = coreNoReturn($sql, array(":kd_kategori"=>$kd_kategori));
+
+    if ($result['success'] == 1) {
+
+        $sql2 = "DELETE FROM `kategori` WHERE `kd_kategori`=:kd_kategori";
+        $result2 = coreNoReturn($sql2, array(":kd_kategori"=>$kd_kategori));
+        if ($result2['success'] == 1) {
+            $response['MessageKategori'] = "Berhasil Menghapus Kategori!";    
+        }else{
+            $response['MessageKategori'] = "Gagal Menghapus Kategori!";    
+        }
+
+        $response['Error'] = 0;
+        $response['MessageKategoriBarang'] = "Berhasil Menghapus Kategori Barang!";    
         return json_encode($response);
     } else {
         $response['Error'] = 1;
