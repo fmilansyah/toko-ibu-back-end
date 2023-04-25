@@ -80,6 +80,27 @@ function getKategoriBarangSQL($kd_kategori){
     }
 }
 
+
+function getDataKeranjangSQL($kd_user){
+    $sql = "SELECT b.kd_barang,b.nama,db.kd_detail_barang,db.varian,db.harga as harga_satuan,k.jumlah_barang, (db.harga * k.jumlah_barang) as harga_total FROM keranjang k
+                    INNER JOIN detail_barang db ON k.kd_detail_barang=db.kd_detail_barang AND k.kd_user=:kd_user
+                    INNER JOIN barang b ON db.kd_barang=b.kd_barang
+                    ORDER BY k.created_at DESC";
+    $result = coreReturnArray($sql, array(":kd_user" => $kd_user));
+
+    if (sizeof($result) > 0) {
+        $response['Error'] = 0;
+        $response['Keranjang'] = $result;
+        $response['Message'] = 'Data Berhasil Ditemukan!';
+        return json_encode($response);
+    }
+    else{
+        $response['Error'] = 1;
+        $response['Message'] = 'Data Tidak Ditemukan!';
+        return json_encode($response);
+    }
+}
+
 function setKategoriBarangSQL($kategori_barang, $hapus_kategori_barang){
 
     $JKB = sizeof($kategori_barang);
@@ -161,6 +182,70 @@ function hilangSimbol($name){
     return str_replace(['!','@','#','$','%','^','&','*',' ', "'"],"",$name);
 }
 
+function hapusKeranjangSQL($kd_keranjang){
+    $sql = "SELECT * FROM keranjang WHERE kd_keranjang=:kd_keranjang";
+    $result = coreReturnArray($sql, array(":kd_keranjang" => $kd_keranjang));
+    
+    if (sizeof($result) > 0) {
+        $kd_detail_barang = $result[0]['kd_detail_barang'];
+        $jumlah_barang = $result[0]['jumlah_barang'];
+
+        $sqlUpdateStok = "UPDATE `detail_barang` db SET `stok`=db.stok+".intval($jumlah_barang)." WHERE `kd_detail_barang`=:kd_detail_barang";
+        $resultUpdateStok = coreNoReturn($sqlUpdateStok, array(":kd_detail_barang"=>$kd_detail_barang));
+        if ($resultUpdateStok['success'] == 1) {
+            $response['MessageUpdateStok'] = "Berhasil Mengembalikan Stok Barang!";
+
+            $sql_delete_keranjang = "DELETE FROM keranjang WHERE `kd_keranjang`=:kd_keranjang";
+            $result_delete_keranjang = coreNoReturn($sql_delete_keranjang, array(":kd_keranjang"=>$kd_keranjang));
+            if ($resultUpdateStok['success'] == 1) {
+                $response['Error'] = 0;
+                $response['Message'] = "Berhasil Menghapus Barang Dari Keranjang!";
+                return json_encode($response);
+            }else {
+                $response['Error'] = 1;
+                $response['Message'] = "Gagal Menghapus Barang Dari Keranjang!";
+                return json_encode($response);
+            }
+        }
+    }else{
+        $response['Error'] = 1;
+        $response['Message'] = "Barang Tidak Ditemukan Dalam Keranjang!";
+        return json_encode($response);
+    }
+}
+
+function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
+
+    $sql = "SELECT * FROM keranjang WHERE kd_user=:kd_user AND kd_detail_barang=:kd_detail_barang";
+    $result = coreReturnArray($sql, array(":kd_user" => $kd_user, ":kd_detail_barang" => $kd_detail_barang));
+
+    if (sizeof($result) > 0) {
+        $sql = "UPDATE `keranjang` db SET `jumlah_barang`=db.jumlah_barang+".intval($jumlah_barang)." WHERE `kd_detail_barang`=:kd_detail_barang AND kd_user=:kd_user";
+        $result = coreNoReturn($sql, array(":kd_detail_barang"=>$kd_detail_barang, ":kd_user"=>$kd_user));
+    }else{
+        $kd_keranjang = substr(str_shuffle("0123456789"), 0, 6);
+        $sql = "INSERT INTO keranjang(kd_keranjang, kd_user, kd_detail_barang, jumlah_barang) VALUES(:kd_keranjang, :kd_user, :kd_detail_barang, :jumlah_barang)";
+        $result = coreNoReturn($sql, array(":kd_keranjang" => $kd_keranjang, ":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang));    
+    }
+    
+    if ($result['success'] == 1) {
+
+        $sqlUpdateStok = "UPDATE `detail_barang` db SET `stok`=db.stok-".intval($jumlah_barang)." WHERE `kd_detail_barang`=:kd_detail_barang";
+        $resultUpdateStok = coreNoReturn($sqlUpdateStok, array(":kd_detail_barang"=>$kd_detail_barang));
+        if ($resultUpdateStok['success'] == 1) {
+            $response['MessageUpdateStok'] = "Berhasil Mengurangi Stok Barang!";
+        }
+        
+        $response['Error'] = 0;
+        $response['Message'] = "Berhasil Menambahkan Keranjang!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Menambahkan Kategori!";
+        return json_encode($response);
+    }
+}
+
 function tambahKategoriSQL($kd_kategori, $nama, $keterangan){
     $sql = "INSERT INTO kategori(kd_kategori, nama, keterangan) VALUES(:kd_kategori, :nama, :keterangan)";
     $result = coreNoReturn($sql, array(":kd_kategori" => $kd_kategori, ":nama" => $nama, ":keterangan" => $keterangan));
@@ -172,6 +257,76 @@ function tambahKategoriSQL($kd_kategori, $nama, $keterangan){
     } else {
         $response['Error'] = 1;
         $response['Message'] = "Gagal Menambahkan Kategori!";
+        return json_encode($response);
+    }
+}
+
+function loginSQL($no_telepon, $password){
+    $sql = "SELECT * FROM user WHERE no_telepon=:no_telepon AND password=:password AND record_status='A'";
+    $result = coreReturnArray($sql, array(":no_telepon" => $no_telepon, ":password" => $password));
+
+    if (sizeof($result) > 0) {
+        $response['Error'] = 0;
+        $response['Barang'] = $result;
+        $response['Message'] = 'Login Berhasil!';
+        return json_encode($response);
+    }else{
+        $response['Error'] = 1;
+        $response['Message'] = 'Login Gagal!';
+        return json_encode($response);
+    }
+}
+
+function daftarUserSQL($nama, $no_telepon, $password){
+    // $random = substr(str_shuffle("0123456789"), 0, 6);
+    $level = 'pembeli';
+
+    $sql = "INSERT INTO user(nama, no_telepon, password, level) VALUES(:nama, :no_telepon, :password, :level)";
+    $result = coreNoReturn($sql, array(":nama" => $nama, ":no_telepon" => $no_telepon, ":password" => $password, ":level" => $level));
+        
+    if ($result['success'] == 1) {
+        $response['Error'] = 0;
+        $response['Message'] = "Berhasil Mendaftarkan User!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Mendaftarkan User!";
+        return json_encode($response);
+    }
+}
+
+function ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil){
+    if($foto_profil == false){
+        $sql = "UPDATE `user` SET `nama`=:nama, 
+                                    `email`=:email,
+                                    `no_telepon`=:no_telepon,
+                                    `alamat`=:alamat,
+                                    `kode_pos`=:kode_pos
+                                WHERE `kd_user`=:kd_user";
+        $result = coreNoReturn($sql, array(":kd_user"=>$kd_user, ":nama"=>$nama, ":email"=>$email, 
+        ":no_telepon"=>$no_telepon, ":alamat"=>$alamat, ":kode_pos"=>$kode_pos));
+    }else{
+        $fp = uploadFileSQL2($foto_profil);
+        $sql = "UPDATE `user` SET `nama`=:nama, 
+                                    `email`=:email,
+                                    `no_telepon`=:no_telepon,
+                                    `alamat`=:alamat,
+                                    `foto_profil`=:foto_profil,  
+                                    `kode_pos`=:kode_pos
+                                WHERE `kd_user`=:kd_user";
+        $result = coreNoReturn($sql, array(":kd_user"=>$kd_user, ":nama"=>$nama, ":email"=>$email, 
+        ":no_telepon"=>$no_telepon, ":alamat"=>$alamat, ":foto_profil"=>$fp, ":kode_pos"=>$kode_pos));
+        $response['fp'] = $fp;
+    }
+    
+
+    if ($result['success'] == 1) {
+        $response['Error'] = 0;
+        $response['Message'] = "Berhasil Mengubah User!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Mengubah User!";
         return json_encode($response);
     }
 }

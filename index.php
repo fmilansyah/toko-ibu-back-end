@@ -33,6 +33,16 @@ Flight::route('POST /deletekategori', 'deleteKategori');
 Flight::route('POST /getkategoribarang', 'getKategoriBarang');
 Flight::route('POST /setkategoribarang', 'setKategoriBarang');
 
+// ----------------- USER
+Flight::route('POST /daftaruser', 'daftarUser');
+Flight::route('POST /ubahuser', 'ubahUser');
+Flight::route('POST /login', 'login');
+
+// ----------------- KERANJANG
+Flight::route('POST /getdatakeranjang', 'getDataKeranjang');
+Flight::route('POST /tambahkeranjang', 'tambahKeranjang');
+Flight::route('POST /hapuskeranjang', 'hapusKeranjang');
+
 
 Flight::start();
 ?>

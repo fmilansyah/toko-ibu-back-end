@@ -7,9 +7,9 @@ $localhost = array(
     "DB_DATABASE" => "toko_ibu", // database name
     "DB_SERVER" => "localhost", // db server
     "WEB_SERVER" => "http://localhost/", // web server
-    "DIR_API_LOCAL" => "/toko_ibu_api", // directori API Local
-    "DIR_API_PRO" => "/toko_ibu_api", // directori API Production
-    "DIR_API" => "/toko_ibu_api", // directori API Production
+    "DIR_API_LOCAL" => "/toko-ibu-back-end", // directori API Local
+    "DIR_API_PRO" => "/toko-ibu-back-end", // directori API Production
+    "DIR_API" => "/toko-ibu-back-end", // directori API Production
     "PATH_FRONTEND" => "", 
 );
 

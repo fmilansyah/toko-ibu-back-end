@@ -57,6 +57,98 @@ function tambahDataBarang(){
     }
 }
 
+
+function ubahUser(){
+    if (isset($_POST['kd_user'], $_POST['nama'], $_POST['no_telepon'])) {
+        $kd_user = htmlspecialchars($_POST['kd_user']);
+        $nama = htmlspecialchars($_POST['nama']);
+        $no_telepon = htmlspecialchars($_POST['no_telepon']);
+
+        $email = htmlspecialchars($_POST['email']);
+        $alamat = htmlspecialchars($_POST['alamat']);
+        $kode_pos = htmlspecialchars($_POST['kode_pos']);
+
+        $foto_profil = false;
+        if(isset($_FILES['foto_profil'])){
+            $foto_profil = $_FILES['foto_profil'];
+        }
+
+        echo ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function daftarUser(){
+    if (isset($_POST['nama'], $_POST['no_telepon'], $_POST['password'])) {
+        $nama = htmlspecialchars($_POST['nama']);
+        $no_telepon = htmlspecialchars($_POST['no_telepon']);
+        $password = md5(htmlspecialchars($_POST['password']));
+
+        echo daftarUserSQL($nama, $no_telepon, $password);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function tambahKeranjang(){
+    if (isset($_POST['kd_user'], $_POST['kd_detail_barang'], $_POST['jumlah_barang'])) {
+        $kd_user = htmlspecialchars($_POST['kd_user']);
+        $kd_detail_barang = htmlspecialchars($_POST['kd_detail_barang']);
+        $jumlah_barang = htmlspecialchars($_POST['jumlah_barang']);
+
+        echo tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function getDataKeranjang(){
+    if (isset($_POST['kd_user'])) {
+        $kd_user = htmlspecialchars($_POST['kd_user']);
+
+        echo getDataKeranjangSQL($kd_user);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function hapusKeranjang(){
+    if (isset($_POST['kd_keranjang'])) {
+        $kd_keranjang = htmlspecialchars($_POST['kd_keranjang']);
+
+        echo hapusKeranjangSQL($kd_keranjang);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+
+
+function login(){
+    if (isset($_POST['no_telepon'], $_POST['password'])) {
+        $no_telepon = htmlspecialchars($_POST['no_telepon']);
+        $password = md5(htmlspecialchars($_POST['password']));
+
+        echo loginSQL($no_telepon, $password);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+
 function tambahKategori(){
     if (isset($_POST['kd_kategori'], $_POST['nama'], $_POST['keterangan'])) {
         $kd_kategori = htmlspecialchars($_POST['kd_kategori']);

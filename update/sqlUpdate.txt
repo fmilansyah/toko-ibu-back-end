@@ -1,3 +1,6 @@
 ﻿4/20/2023
 ALTER TABLE `keranjang` CHANGE `kd_ukuran` `kd_detail_barang` VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
 ALTER TABLE `kategori` ADD `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `keterangan`;
+
+5/20/2034
+ALTER TABLE `user` ADD `foto_profil` TEXT NULL DEFAULT NULL AFTER `alamat`;
