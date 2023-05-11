@@ -21,11 +21,11 @@ $serverName = $_SERVER['SERVER_NAME'];
 if ($serverName == 'localhost') {
     // local
     $API_URL = "//localhost". DIR_API_LOCAL;
-    $globalVar = $GLOBALS[$serverName];
+    // $globalVar = $GLOBALS[$serverName];
 } else {
     // production
     $API_URL = "//".$serverName. DIR_API_PRO;
-    $globalVar = $GLOBALS[$delSlash]; 
+    // $globalVar = $GLOBALS[$delSlash]; 
 }
 
 
@@ -197,7 +197,7 @@ function hapusKeranjangSQL($kd_keranjang){
 
             $sql_delete_keranjang = "DELETE FROM keranjang WHERE `kd_keranjang`=:kd_keranjang";
             $result_delete_keranjang = coreNoReturn($sql_delete_keranjang, array(":kd_keranjang"=>$kd_keranjang));
-            if ($resultUpdateStok['success'] == 1) {
+            if ($result_delete_keranjang['success'] == 1) {
                 $response['Error'] = 0;
                 $response['Message'] = "Berhasil Menghapus Barang Dari Keranjang!";
                 return json_encode($response);
@@ -244,6 +244,92 @@ function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
         $response['Message'] = "Gagal Menambahkan Kategori!";
         return json_encode($response);
     }
+}
+
+function kirimBarangSQL($kd_order, $no_resi){
+    $status_order = 'PENGIRIMAN';
+    $sql = "UPDATE `orders` db SET `no_resi`=:no_resi, status_order=:status_order WHERE `kd_order`=:kd_order";
+    $result = coreNoReturn($sql, array(":no_resi"=>$no_resi, ":status_order"=>$status_order, ":kd_order"=>$kd_order));
+
+    if ($result['success'] == 1) {
+        $response['Error'] = 0;
+        $response['Message'] = "Berhasil Mengubah Status Order!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Mengubah Status Order!";
+        return json_encode($response);
+    }
+}
+
+function selesaiOrderSQL($kd_order){
+    $status_order = 'SELESAI';
+    $sql = "UPDATE `orders` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
+    $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
+
+    if ($result['success'] == 1) {
+        $response['Error'] = 0;
+        $response['Message'] = "Berhasil Mengubah Status Order!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Mengubah Status Order!";
+        return json_encode($response);
+    }
+}
+
+
+function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman){
+    $kd_order = substr(str_shuffle("0123456789"), 0, 9);
+
+    $total_akhir = 0;
+    foreach ($orders as $key => $value) {
+        $total_akhir += $value['harga_total'];
+    }
+    
+    $status_pembayaran = 'LUNAS';
+    $status_order = 'PROSES';
+    $sqlOrder = "INSERT INTO orders(kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order)";
+    $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order));
+
+    if ($resultOrder['success'] == 1) {
+
+        foreach ($orders as $key => $value) {
+            $sqlOrderDetail = "INSERT INTO order_detail(kd_order, kd_detail_barang, jumlah_barang, total_harga) VALUES(:kd_order, :kd_detail_barang, :jumlah_barang, :total_harga)";
+            $resultOrderDetail = coreNoReturn($sqlOrderDetail, array(":kd_order" => $kd_order, ":kd_detail_barang" => $value['kd_detail_barang'], ":jumlah_barang" => $value['jumlah_barang'], ":total_harga" => $value['harga_total']));            
+
+            if($jenis_order == 'keranjang'){
+                $cobaHapusKeranjang = json_decode(hapusKeranjangOrder($value['kd_detail_barang'], $kd_user));
+            }
+        }
+
+        $response['Error'] = 0;
+        // $response['total_akhir'] = $total_akhir;
+        // $response['orders'] = $orders;
+        $jenis_order == 'keranjang' ? $response['cobaHapusKeranjang'] = $cobaHapusKeranjang : '';
+        $response['Message'] = "Berhasil Order Barang!";
+        return json_encode($response);
+    } else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Order Barang!";
+        return json_encode($response);
+    }
+}
+
+function hapusKeranjangOrder($kd_detail_barang, $kd_user){
+    $sql_delete_keranjang = "DELETE FROM keranjang WHERE `kd_user`=:kd_user AND kd_detail_barang=:kd_detail_barang";
+    $result_delete_keranjang = coreNoReturn($sql_delete_keranjang, array(":kd_user"=>$kd_user, ":kd_detail_barang"=>$kd_detail_barang));
+    
+    if ($result_delete_keranjang['success'] == 1) {
+        $response['Error'] = 0;
+        $response['Message'] = "Berhasil Menghapus Barang Dari Keranjang!";
+        return json_encode($response);
+    }else {
+        $response['Error'] = 1;
+        $response['Message'] = "Gagal Menghapus Barang Dari Keranjang!";
+        return json_encode($response);
+    }
+    
 }
 
 function tambahKategoriSQL($kd_kategori, $nama, $keterangan){

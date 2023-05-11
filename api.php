@@ -57,6 +57,50 @@ function tambahDataBarang(){
     }
 }
 
+function orderBarang(){
+    if (isset($_POST['kd_user'], $_POST['orders'], $_POST['jenis_order'], $_POST['jasa_pengiriman'], $_POST['jenis_pengiriman'])) {
+        $kd_user = htmlspecialchars($_POST['kd_user']);
+        $jenis_order = htmlspecialchars($_POST['jenis_order']);
+        $orders = json_decode($_POST['orders'], true);
+
+        $jasa_pengiriman = htmlspecialchars($_POST['jasa_pengiriman']);
+        $jenis_pengiriman = htmlspecialchars($_POST['jenis_pengiriman']);
+
+        echo orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function kirimBarang(){
+    if (isset($_POST['kd_order'], $_POST['no_resi'])) {
+        $kd_order = htmlspecialchars($_POST['kd_order']);
+        $no_resi = htmlspecialchars($_POST['no_resi']);
+
+        echo kirimBarangSQL($kd_order, $no_resi);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function selesaiOrder(){
+    if (isset($_POST['kd_order'])) {
+        $kd_order = htmlspecialchars($_POST['kd_order']);
+
+        echo selesaiOrderSQL($kd_order);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+
+
 
 function ubahUser(){
     if (isset($_POST['kd_user'], $_POST['nama'], $_POST['no_telepon'])) {

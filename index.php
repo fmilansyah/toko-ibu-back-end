@@ -16,6 +16,10 @@ require_once __DIR__ . '/core/flight/Flight.php';
 require_once __DIR__ . '/api.php';
 // ini_set('memory_limit', '-1');
 
+// Flight::set('flight.log_errors', true);
+
+// Flight::set('flight.base_url', 'http://192.168.231.90/');
+
 // ------------------ BARANG
 Flight::route('GET /getdatabarang', 'getDataBarang');
 Flight::route('POST /getdetailbarang', 'getDetailBarang');
@@ -25,6 +29,9 @@ Flight::route('POST /deletedatabarang', 'deleteDataBarang');
 
 // ------------------ KATEGORI
 Flight::route('GET /getkategori', 'getKategori');
+// Flight::route('GET /getkategori', function(){
+//     echo 'hello world!';
+// });
 Flight::route('POST /tambahkategori', 'tambahKategori');
 Flight::route('POST /ubahkategori', 'ubahKategori');
 Flight::route('POST /deletekategori', 'deleteKategori');
@@ -42,6 +49,11 @@ Flight::route('POST /login', 'login');
 Flight::route('POST /getdatakeranjang', 'getDataKeranjang');
 Flight::route('POST /tambahkeranjang', 'tambahKeranjang');
 Flight::route('POST /hapuskeranjang', 'hapusKeranjang');
+
+// ---------------- ORDER
+Flight::route('POST /orderbarang', 'orderBarang');
+Flight::route('POST /kirimbarang', 'kirimBarang');
+Flight::route('POST /selesaiorder', 'selesaiOrder');
 
 
 Flight::start();

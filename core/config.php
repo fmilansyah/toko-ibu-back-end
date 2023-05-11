@@ -13,7 +13,7 @@ $localhost = array(
     "PATH_FRONTEND" => "", 
 );
 
-$api = array(
+$production = array(
     "DB_USER" => "id19262965_maudhio", // db user
     "DB_PASSWORD" => "5jUNq^5yr*Vp(3xlr1E#", // db password (mention your db password here)
     "DB_DATABASE" => "id19262965_reactapi", // database name
