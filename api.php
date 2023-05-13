@@ -20,6 +20,10 @@ function getDataBarang(){
     echo getDataBarangSQL();
 }
 
+function getKategoriDanBarang(){
+    echo getKategoriDanBarangSQL();
+}
+
 function getKategori(){
     echo getKategoriSQL();
 }

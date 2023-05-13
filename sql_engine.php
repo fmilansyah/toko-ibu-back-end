@@ -17,6 +17,8 @@ if ($method == "OPTIONS") {
 date_default_timezone_set('Asia/Jakarta');
 require_once __DIR__ . '/core/core.php';
 
+const STATUS_ACTIVE = 'A';
+
 $serverName = $_SERVER['SERVER_NAME'];
 if ($serverName == 'localhost') {
     // local
@@ -45,9 +47,51 @@ function getDataBarangSQL(){
     }
 }
 
-function getKategoriSQL(){
+function getKategoriDanBarangSQL(){
+    $categories = getKategoriSQL(true);
+
+    $result = [];
+    foreach ($categories as $category) {
+        $sql = 'SELECT b.* FROM kategori_barang kb INNER JOIN (
+                    SELECT barang.*, detail_barang.varian, detail_barang.harga, file_barang.file FROM barang
+                    INNER JOIN detail_barang ON barang.kd_barang = detail_barang.kd_barang
+                    INNER JOIN file_barang ON barang.kd_barang = file_barang.kd_barang
+                    WHERE barang.record_status = "'.STATUS_ACTIVE.'"
+                    LIMIT 1
+                ) b ON kb.kd_barang = b.kd_barang
+                WHERE kb.kd_kategori = "'.$category['kd_kategori'].'"
+                LIMIT 10';
+        $items = coreReturnArray($sql, null);
+
+        if (sizeof($items) > 0) {
+            $result[] = [
+                'kd_kategori' => $category['kd_kategori'],
+                'nama' => $category['nama'],
+                'jml_barang' => sizeof($items),
+                'barang' => $items,
+            ];
+        }
+    }
+
+    if (sizeof($result) > 0) {
+        $response['Error'] = 0;
+        $response['Kategori'] = $result;
+        $response['Message'] = 'Data Berhasil Ditemukan!';
+        return json_encode($response);
+    }else{
+        $response['Error'] = 1;
+        $response['Message'] = 'Data Tidak Ditemukan!';
+        return json_encode($response);
+    }
+}
+
+function getKategoriSQL($returnData = false){
     $sql = "SELECT * FROM kategori ORDER BY createdAt DESC";
     $result = coreReturnArray($sql, null);
+
+    if ($returnData) {
+        return $result;
+    }
 
     if (sizeof($result) > 0) {
         $response['Error'] = 0;
