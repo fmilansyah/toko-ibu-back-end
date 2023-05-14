@@ -53,7 +53,7 @@ function getKategoriDanBarangSQL(){
     $result = [];
     foreach ($categories as $category) {
         $sql = 'SELECT b.* FROM kategori_barang kb INNER JOIN (
-                    SELECT barang.*, detail_barang.varian, detail_barang.harga, file_barang.file FROM barang
+                    SELECT barang.*, detail_barang.kd_detail_barang, detail_barang.varian, detail_barang.harga, file_barang.file FROM barang
                     INNER JOIN detail_barang ON barang.kd_barang = detail_barang.kd_barang
                     INNER JOIN file_barang ON barang.kd_barang = file_barang.kd_barang
                     WHERE barang.record_status = "'.STATUS_ACTIVE.'"
@@ -196,20 +196,32 @@ function setKategoriBarangSQL($kategori_barang, $hapus_kategori_barang){
 }
 
 function getDetailBarangSQL($kd_barang){
+    $barang = "SELECT * FROM `barang` WHERE kd_barang=:kd_barang";
+    $result_barang = coreReturnArray($barang, array(":kd_barang" => $kd_barang));
+
     $detail_barang = "SELECT * FROM `detail_barang` WHERE kd_barang=:kd_barang ORDER BY created_at DESC";
     $result_detail_barang = coreReturnArray($detail_barang, array(":kd_barang" => $kd_barang));
 
     $file_barang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at DESC";
     $result_file_barang = coreReturnArray($file_barang, array(":kd_barang" => $kd_barang));
 
-    if (sizeof($result_detail_barang) > 0 || sizeof($result_file_barang) > 0) {
+    $kategori_barang = "SELECT k.* FROM `kategori_barang` kb INNER JOIN kategori k ON kb.kd_kategori = k.kd_kategori WHERE kd_barang=:kd_barang";
+    $result_kategori_barang = coreReturnArray($kategori_barang, array(":kd_barang" => $kd_barang));
+
+    if (sizeof($result_barang) > 0 || sizeof($result_detail_barang) > 0 || sizeof($result_file_barang) > 0) {
         $response['Error'] = 0;
-        
+
+        if (sizeof($result_barang) > 0) {
+            $response['barang'] = $result_barang[0];
+        }
         if (sizeof($result_detail_barang) > 0) {
             $response['detail_barang'] = $result_detail_barang;
         }
         if (sizeof($result_file_barang) > 0) {
             $response['file_barang'] = $result_file_barang;
+        }
+        if (sizeof($result_kategori_barang) > 0) {
+            $response['kategori_barang'] = $result_kategori_barang;
         }
         $response['Message'] = 'Data Berhasil Ditemukan!';
         return json_encode($response);

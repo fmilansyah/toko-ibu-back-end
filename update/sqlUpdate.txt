@@ -9,3 +9,7 @@ ALTER TABLE `user` ADD `foto_profil` TEXT NULL DEFAULT NULL AFTER `alamat`;
 ALTER TABLE `orders` ADD `jasa_pengiriman` VARCHAR(100) NULL DEFAULT NULL AFTER `status_pembayaran`, ADD `jenis_pengiriman` VARCHAR(100) NULL DEFAULT NULL AFTER `jasa_pengiriman`;
 ALTER TABLE `orders` ADD `status_order` VARCHAR(100) NULL DEFAULT NULL AFTER `jenis_pengiriman`;
 ALTER TABLE `orders` ADD `no_resi` VARCHAR(100) NULL DEFAULT NULL AFTER `jenis_pengiriman`;
+
+5/14/2023
+ALTER TABLE `barang` ADD COLUMN `deskripsi` text NULL AFTER `deleted_at`, ADD COLUMN `diskon` float NULL AFTER `deskripsi`;
+ALTER TABLE `keranjang` ADD COLUMN `harga_barang` int(100) NOT NULL AFTER `created_at`;
