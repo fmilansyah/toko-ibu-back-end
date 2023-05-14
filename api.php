@@ -43,8 +43,7 @@ function setKategoriBarang(){
 }
 
 function tambahDataBarang(){
-    if (isset($_POST['kd_barang'], $_POST['nama'], $_POST['ukuran'])) {
-        $kd_barang = htmlspecialchars($_POST['kd_barang']);
+    if (isset($_POST['nama'], $_POST['ukuran'])) {
         $nama = htmlspecialchars($_POST['nama']);
         $ukuran = json_decode($_POST['ukuran'], true);
         
@@ -53,7 +52,7 @@ function tambahDataBarang(){
             $listFile = $_FILES['images'];
         }
 
-        echo tambahDataBarangSQL($kd_barang, $nama, $ukuran, $listFile);
+        echo tambahDataBarangSQL($nama, $ukuran, $listFile);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -198,12 +197,11 @@ function login(){
 
 
 function tambahKategori(){
-    if (isset($_POST['kd_kategori'], $_POST['nama'], $_POST['keterangan'])) {
-        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
+    if (isset($_POST['nama'], $_POST['keterangan'])) {
         $nama = htmlspecialchars($_POST['nama']);
         $keterangan = htmlspecialchars($_POST['keterangan']);
         
-        echo tambahKategoriSQL($kd_kategori, $nama, $keterangan);
+        echo tambahKategoriSQL($nama, $keterangan);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";

@@ -267,7 +267,10 @@ function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
         $sql = "UPDATE `keranjang` db SET `jumlah_barang`=db.jumlah_barang+".intval($jumlah_barang)." WHERE `kd_detail_barang`=:kd_detail_barang AND kd_user=:kd_user";
         $result = coreNoReturn($sql, array(":kd_detail_barang"=>$kd_detail_barang, ":kd_user"=>$kd_user));
     }else{
-        $kd_keranjang = substr(str_shuffle("0123456789"), 0, 6);
+        $getLastId = json_decode(getLastIdTable('kd_keranjang', 'keranjang'), true);
+        $lastId = $getLastId['data'];
+        $kd_keranjang = 'KER'.$lastId;
+
         $sql = "INSERT INTO keranjang(kd_keranjang, kd_user, kd_detail_barang, jumlah_barang) VALUES(:kd_keranjang, :kd_user, :kd_detail_barang, :jumlah_barang)";
         $result = coreNoReturn($sql, array(":kd_keranjang" => $kd_keranjang, ":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang));    
     }
@@ -324,7 +327,9 @@ function selesaiOrderSQL($kd_order){
 
 
 function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman){
-    $kd_order = substr(str_shuffle("0123456789"), 0, 9);
+    $getLastId = json_decode(getLastIdTable('kd_order', 'orders'), true);
+    $lastId = $getLastId['data'];
+    $kd_order = 'O'.$lastId;
 
     $total_akhir = 0;
     foreach ($orders as $key => $value) {
@@ -376,7 +381,11 @@ function hapusKeranjangOrder($kd_detail_barang, $kd_user){
     
 }
 
-function tambahKategoriSQL($kd_kategori, $nama, $keterangan){
+function tambahKategoriSQL($nama, $keterangan){
+    $getLastId = json_decode(getLastIdTable('kd_kategori', 'kategori'), true);
+    $lastId = $getLastId['data'];
+    $kd_kategori = 'KAT'.$lastId;
+
     $sql = "INSERT INTO kategori(kd_kategori, nama, keterangan) VALUES(:kd_kategori, :nama, :keterangan)";
     $result = coreNoReturn($sql, array(":kd_kategori" => $kd_kategori, ":nama" => $nama, ":keterangan" => $keterangan));
 
@@ -461,7 +470,27 @@ function ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $
     }
 }
 
-function tambahDataBarangSQL($kd_barang, $nama, $ukuran, $listFile){
+function getLastIdTable($idField, $table){
+    $sql = "SELECT count(".$idField.") as jumlah FROM ".$table."";
+    $result = coreReturnArray($sql, null);
+
+    if (sizeof($result) > 0) {
+        $response['Error'] = 0;
+        $response['data'] = $result[0]['jumlah']+1;
+        $response['Message'] = 'Data Berhasil Ditemukan!';
+        return json_encode($response);
+    }else{
+        $response['Error'] = 1;
+        $response['Message'] = 'Data Tidak Ditemukan!';
+        return json_encode($response);
+    }
+}   
+
+function tambahDataBarangSQL($nama, $ukuran, $listFile){
+
+    $getLastId = json_decode(getLastIdTable('kd_barang', 'barang'), true);
+    $lastId = $getLastId['data'];
+    $kd_barang = 'B'.$lastId;
     
     $sql = "INSERT INTO barang(kd_barang, nama) VALUES(:kd_barang, :nama)";
     $result = coreNoReturn($sql, array(":kd_barang" => $kd_barang, ":nama" => $nama));
@@ -472,10 +501,14 @@ function tambahDataBarangSQL($kd_barang, $nama, $ukuran, $listFile){
         if($jumlah_ukuran > 0){
             $hitung_input_ukuran = 0;
             foreach ($ukuran as $key => $data) {
+                $getLastId = json_decode(getLastIdTable('kd_detail_barang', 'detail_barang'), true);
+                $lastId = $getLastId['data'];
+                $kd_detail_barang = 'DB'.$lastId;
+
                 $sql_i_Ukuran = "INSERT INTO `detail_barang`(`kd_detail_barang`, `kd_barang`, `varian`, `stok`, `harga`) 
                         VALUES (:kd_detail_barang, :kd_barang, :varian, :stok, :harga)";
                 $result_i_ukuran = coreNoReturn($sql_i_Ukuran, array(
-                                                    ":kd_detail_barang" => $data['kd_detail_barang'], 
+                                                    ":kd_detail_barang" => $kd_detail_barang, 
                                                     ":kd_barang" => $kd_barang, 
                                                     ":varian" => $data['varian'],
                                                     ":stok" => $data['stok'],
@@ -499,13 +532,16 @@ function tambahDataBarangSQL($kd_barang, $nama, $ukuran, $listFile){
             $jumlah_i_file = sizeof($listFile['name']);
             $hitung_upload = 0;
             foreach($listFile['name'] as $keyFile => $in){
+
+                $getLastId = json_decode(getLastIdTable('kd_file', 'file_barang'), true);
+                $lastId = $getLastId['data'];
+                $kd_file = 'FB'.$lastId;
                 
                 $tipe = $listFile['type'][$keyFile];
                 $fileName = date("YmdHis"). "-" .$in; 
                 $fileName = hilangSimbol($fileName);
 
                 $fileDir = $GLOBALS['API_URL'].'/assets/file/'.date("Y/m/d").'/';
-                $kd_file = substr(str_shuffle("0123456789"), 0, 8);
 
                 $result = coreNoReturn($sql, array(":kd_file" => $kd_file, ":kd_barang" => $kd_barang, ":file" => $fileDir .'/'. urldecode($fileName)));
 
