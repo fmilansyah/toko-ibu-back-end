@@ -22,7 +22,7 @@ const STATUS_ACTIVE = 'A';
 $serverName = $_SERVER['SERVER_NAME'];
 if ($serverName == 'localhost') {
     // local
-    $API_URL = "//localhost". DIR_API_LOCAL;
+    $API_URL = "http://localhost". DIR_API_LOCAL;
     // $globalVar = $GLOBALS[$serverName];
 } else {
     // production
@@ -553,7 +553,7 @@ function tambahDataBarangSQL($nama, $ukuran, $listFile){
                 $fileName = date("YmdHis"). "-" .$in; 
                 $fileName = hilangSimbol($fileName);
 
-                $fileDir = $GLOBALS['API_URL'].'/assets/file/'.date("Y/m/d").'/';
+                $fileDir = $GLOBALS['API_URL'].'/assets/file/'.date("Y/m/d");
 
                 $result = coreNoReturn($sql, array(":kd_file" => $kd_file, ":kd_barang" => $kd_barang, ":file" => $fileDir .'/'. urldecode($fileName)));
 
