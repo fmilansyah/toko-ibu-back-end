@@ -300,7 +300,7 @@ function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
         return json_encode($response);
     } else {
         $response['Error'] = 1;
-        $response['Message'] = "Gagal Menambahkan Kategori!";
+        $response['Message'] = "Gagal Menambahkan Keranjang!";
         return json_encode($response);
     }
 }
