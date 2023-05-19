@@ -418,7 +418,7 @@ function loginSQL($no_telepon, $password){
 
     if (sizeof($result) > 0) {
         $response['Error'] = 0;
-        $response['Barang'] = $result;
+        $response['User'] = $result[0];
         $response['Message'] = 'Login Berhasil!';
         return json_encode($response);
     }else{
@@ -433,11 +433,12 @@ function daftarUserSQL($nama, $no_telepon, $password){
     $level = 'pembeli';
 
     $sql = "INSERT INTO user(nama, no_telepon, password, level) VALUES(:nama, :no_telepon, :password, :level)";
-    $result = coreNoReturn($sql, array(":nama" => $nama, ":no_telepon" => $no_telepon, ":password" => $password, ":level" => $level));
+    $result = getLastID($sql, array(":nama" => $nama, ":no_telepon" => $no_telepon, ":password" => $password, ":level" => $level));
         
-    if ($result['success'] == 1) {
+    if ($result !== null) {
         $response['Error'] = 0;
         $response['Message'] = "Berhasil Mendaftarkan User!";
+        $response['data'] = $result;
         return json_encode($response);
     } else {
         $response['Error'] = 1;
