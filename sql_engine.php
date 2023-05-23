@@ -126,7 +126,7 @@ function getKategoriBarangSQL($kd_kategori){
 
 
 function getDataKeranjangSQL($kd_user){
-    $sql = "SELECT b.kd_barang,b.nama,db.kd_detail_barang,db.varian,db.harga as harga_satuan,k.jumlah_barang, (db.harga * k.jumlah_barang) as harga_total FROM keranjang k
+    $sql = "SELECT k.kd_keranjang, b.kd_barang,b.nama,db.kd_detail_barang,db.varian,db.harga as harga_satuan,k.jumlah_barang, (db.harga * k.jumlah_barang) as harga_total FROM keranjang k
                     INNER JOIN detail_barang db ON k.kd_detail_barang=db.kd_detail_barang AND k.kd_user=:kd_user
                     INNER JOIN barang b ON db.kd_barang=b.kd_barang
                     ORDER BY k.created_at DESC";
