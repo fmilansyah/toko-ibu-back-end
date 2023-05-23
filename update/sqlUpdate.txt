@@ -13,3 +13,7 @@ ALTER TABLE `orders` ADD `no_resi` VARCHAR(100) NULL DEFAULT NULL AFTER `jenis_p
 5/14/2023
 ALTER TABLE `barang` ADD COLUMN `deskripsi` text NULL AFTER `deleted_at`, ADD COLUMN `diskon` float NULL AFTER `deskripsi`;
 ALTER TABLE `keranjang` ADD COLUMN `harga_barang` int(100) NOT NULL AFTER `created_at`;
+
+5/21/2023
+ALTER TABLE `barang` ADD `kd_kategori` VARCHAR(10) NULL DEFAULT NULL AFTER `nama`;
+DROP TABLE `toko_ibu`.`kategori_barang`

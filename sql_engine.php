@@ -52,16 +52,11 @@ function getKategoriDanBarangSQL(){
 
     $result = [];
     foreach ($categories as $category) {
-        $sql = 'SELECT b.* FROM kategori_barang kb INNER JOIN (
-                    SELECT barang.*, detail_barang.kd_detail_barang, detail_barang.varian, detail_barang.harga, file_barang.file FROM barang
-                    INNER JOIN detail_barang ON barang.kd_barang = detail_barang.kd_barang
-                    INNER JOIN file_barang ON barang.kd_barang = file_barang.kd_barang
-                    WHERE barang.record_status = "'.STATUS_ACTIVE.'"
-                    LIMIT 1
-                ) b ON kb.kd_barang = b.kd_barang
-                WHERE kb.kd_kategori = "'.$category['kd_kategori'].'"
-                LIMIT 10';
-        $items = coreReturnArray($sql, null);
+        $sql = 'SELECT b.*,db.kd_detail_barang,db.varian,db.harga, fb.file FROM barang b
+        INNER JOIN detail_barang db ON b.kd_barang=db.kd_barang
+        INNER JOIN file_barang fb ON b.kd_barang=fb.kd_barang
+        WHERE b.kd_kategori=:kd_kategori AND b.record_status=:record_status GROUP BY b.kd_barang LIMIT 10';
+        $items = coreReturnArray($sql, array(":kd_kategori" => $category['kd_kategori'], ":record_status"=>STATUS_ACTIVE));
 
         if (sizeof($items) > 0) {
             $result[] = [
@@ -84,6 +79,45 @@ function getKategoriDanBarangSQL(){
         return json_encode($response);
     }
 }
+
+//BACKUP
+// function getKategoriDanBarangSQL(){
+//     $categories = getKategoriSQL(true);
+
+//     $result = [];
+//     foreach ($categories as $category) {
+//         $sql = 'SELECT b.* FROM kategori_barang kb INNER JOIN (
+//                     SELECT barang.*, detail_barang.kd_detail_barang, detail_barang.varian, detail_barang.harga, file_barang.file FROM barang
+//                     INNER JOIN detail_barang ON barang.kd_barang = detail_barang.kd_barang
+//                     INNER JOIN file_barang ON barang.kd_barang = file_barang.kd_barang
+//                     WHERE barang.record_status = "'.STATUS_ACTIVE.'"
+//                     LIMIT 1
+//                 ) b ON kb.kd_barang = b.kd_barang
+//                 WHERE kb.kd_kategori = "'.$category['kd_kategori'].'"
+//                 LIMIT 10';
+//         $items = coreReturnArray($sql, null);
+
+//         if (sizeof($items) > 0) {
+//             $result[] = [
+//                 'kd_kategori' => $category['kd_kategori'],
+//                 'nama' => $category['nama'],
+//                 'jml_barang' => sizeof($items),
+//                 'barang' => $items,
+//             ];
+//         }
+//     }
+
+//     if (sizeof($result) > 0) {
+//         $response['Error'] = 0;
+//         $response['Kategori'] = $result;
+//         $response['Message'] = 'Data Berhasil Ditemukan!';
+//         return json_encode($response);
+//     }else{
+//         $response['Error'] = 1;
+//         $response['Message'] = 'Data Tidak Ditemukan!';
+//         return json_encode($response);
+//     }
+// }
 
 function getKategoriSQL($returnData = false){
     $sql = "SELECT * FROM kategori ORDER BY createdAt DESC";
@@ -205,8 +239,11 @@ function getDetailBarangSQL($kd_barang){
     $file_barang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at DESC";
     $result_file_barang = coreReturnArray($file_barang, array(":kd_barang" => $kd_barang));
 
-    $kategori_barang = "SELECT k.* FROM `kategori_barang` kb INNER JOIN kategori k ON kb.kd_kategori = k.kd_kategori WHERE kd_barang=:kd_barang";
+    $kategori_barang = "SELECT k.* FROM `kategori` k INNER JOIN barang b ON k.kd_kategori=b.kd_kategori WHERE b.kd_barang=:kd_barang";
     $result_kategori_barang = coreReturnArray($kategori_barang, array(":kd_barang" => $kd_barang));
+
+    // $kategori_barang = "SELECT k.* FROM `kategori_barang` kb INNER JOIN kategori k ON kb.kd_kategori = k.kd_kategori WHERE kd_barang=:kd_barang";
+    // $result_kategori_barang = coreReturnArray($kategori_barang, array(":kd_barang" => $kd_barang));
 
     if (sizeof($result_barang) > 0 || sizeof($result_detail_barang) > 0 || sizeof($result_file_barang) > 0) {
         $response['Error'] = 0;
@@ -300,7 +337,7 @@ function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
         return json_encode($response);
     } else {
         $response['Error'] = 1;
-        $response['Message'] = "Gagal Menambahkan Kategori!";
+        $response['Message'] = "Gagal Menambahkan Keranjang!";
         return json_encode($response);
     }
 }
@@ -499,14 +536,14 @@ function getLastIdTable($idField, $table){
     }
 }   
 
-function tambahDataBarangSQL($nama, $ukuran, $listFile){
+function tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile){
 
     $getLastId = json_decode(getLastIdTable('kd_barang', 'barang'), true);
     $lastId = $getLastId['data'];
     $kd_barang = 'B'.$lastId;
     
-    $sql = "INSERT INTO barang(kd_barang, nama) VALUES(:kd_barang, :nama)";
-    $result = coreNoReturn($sql, array(":kd_barang" => $kd_barang, ":nama" => $nama));
+    $sql = "INSERT INTO barang(kd_barang, nama, kd_kategori) VALUES(:kd_barang, :nama, :kd_kategori)";
+    $result = coreNoReturn($sql, array(":kd_barang" => $kd_barang, ":nama" => $nama, ":kd_kategori" => $kd_kategori));
         
     if ($result['success'] == 1) {
         
@@ -606,10 +643,10 @@ function ubahKategoriSQL($kd_kategori, $nama, $keterangan){
     }
 }
 
-function ubahDataBarangSQL($kd_barang, $nama, $ukuran, $hapus_ukuran, $hapus_file, $listFile){
+function ubahDataBarangSQL($kd_barang, $nama, $kd_kategori, $ukuran, $hapus_ukuran, $hapus_file, $listFile){
     
-    $sql = "UPDATE `barang` SET `nama`=:nama WHERE `kd_barang`=:kd_barang";
-    $result = coreNoReturn($sql, array(":kd_barang"=>$kd_barang, ":nama"=>$nama));
+    $sql = "UPDATE `barang` SET `nama`=:nama, `kd_kategori`=:kd_kategori WHERE `kd_barang`=:kd_barang";
+    $result = coreNoReturn($sql, array(":kd_barang"=>$kd_barang, ":nama"=>$nama, ":kd_kategori"=>$kd_kategori));
         
     if ($result['success'] == 1) {
 
@@ -738,13 +775,14 @@ function deleteDataBarangSQL($kd_barang){
 
 function deleteKategoriSQL($kd_kategori){
 
-    $sql = "DELETE FROM `kategori_barang` WHERE `kd_kategori`=:kd_kategori";
+    $sql = "UPDATE `barang` SET kd_kategori=NULL WHERE `kd_kategori`=:kd_kategori";
     $result = coreNoReturn($sql, array(":kd_kategori"=>$kd_kategori));
 
     if ($result['success'] == 1) {
 
         $sql2 = "DELETE FROM `kategori` WHERE `kd_kategori`=:kd_kategori";
         $result2 = coreNoReturn($sql2, array(":kd_kategori"=>$kd_kategori));
+
         if ($result2['success'] == 1) {
             $response['MessageKategori'] = "Berhasil Menghapus Kategori!";    
         }else{
@@ -760,6 +798,31 @@ function deleteKategoriSQL($kd_kategori){
         return json_encode($response);
     }
 }
+
+// function deleteKategoriSQL($kd_kategori){
+
+//     $sql = "DELETE FROM `kategori_barang` WHERE `kd_kategori`=:kd_kategori";
+//     $result = coreNoReturn($sql, array(":kd_kategori"=>$kd_kategori));
+
+//     if ($result['success'] == 1) {
+
+//         $sql2 = "DELETE FROM `kategori` WHERE `kd_kategori`=:kd_kategori";
+//         $result2 = coreNoReturn($sql2, array(":kd_kategori"=>$kd_kategori));
+//         if ($result2['success'] == 1) {
+//             $response['MessageKategori'] = "Berhasil Menghapus Kategori!";    
+//         }else{
+//             $response['MessageKategori'] = "Gagal Menghapus Kategori!";    
+//         }
+
+//         $response['Error'] = 0;
+//         $response['MessageKategoriBarang'] = "Berhasil Menghapus Kategori Barang!";    
+//         return json_encode($response);
+//     } else {
+//         $response['Error'] = 1;
+//         $response['Message'] = "Gagal Menghapus Data!";
+//         return json_encode($response);
+//     }
+// }
 
 function uploadFileSQL2($file){
 

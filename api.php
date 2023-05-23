@@ -43,8 +43,9 @@ function setKategoriBarang(){
 }
 
 function tambahDataBarang(){
-    if (isset($_POST['nama'], $_POST['ukuran'])) {
+    if (isset($_POST['nama'], $_POST['kd_kategori'], $_POST['ukuran'])) {
         $nama = htmlspecialchars($_POST['nama']);
+        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
         $ukuran = json_decode($_POST['ukuran'], true);
         
         $listFile = false;
@@ -52,7 +53,7 @@ function tambahDataBarang(){
             $listFile = $_FILES['images'];
         }
 
-        echo tambahDataBarangSQL($nama, $ukuran, $listFile);
+        echo tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -210,9 +211,10 @@ function tambahKategori(){
 }
 
 function ubahDataBarang(){
-    if (isset($_POST['kd_barang'], $_POST['nama'], $_POST['ukuran'], $_POST['hapus_ukuran'], $_POST['hapus_file'])) {
+    if (isset($_POST['kd_barang'], $_POST['nama'], $_POST['kd_kategori'], $_POST['ukuran'], $_POST['hapus_ukuran'], $_POST['hapus_file'])) {
         $kd_barang = htmlspecialchars($_POST['kd_barang']);
         $nama = htmlspecialchars($_POST['nama']);
+        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
         $ukuran = json_decode($_POST['ukuran'], true);
         $hapus_ukuran = json_decode($_POST['hapus_ukuran'], true);
         $hapus_file = json_decode($_POST['hapus_file'], true);
@@ -222,7 +224,7 @@ function ubahDataBarang(){
             $listFile = $_FILES['images'];
         }
 
-        echo ubahDataBarangSQL($kd_barang, $nama, $ukuran, $hapus_ukuran, $hapus_file, $listFile);
+        echo ubahDataBarangSQL($kd_barang, $nama, $kd_kategori, $ukuran, $hapus_ukuran, $hapus_file, $listFile);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
