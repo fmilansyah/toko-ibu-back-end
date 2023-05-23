@@ -12,6 +12,7 @@ if ($method == "OPTIONS") {
     die();
 }
 
+require __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/core/flight/Flight.php';
 require_once __DIR__ . '/api.php';
 // ini_set('memory_limit', '-1');
