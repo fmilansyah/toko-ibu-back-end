@@ -17,3 +17,9 @@ ALTER TABLE `keranjang` ADD COLUMN `harga_barang` int(100) NOT NULL AFTER `creat
 5/21/2023
 ALTER TABLE `barang` ADD `kd_kategori` VARCHAR(10) NULL DEFAULT NULL AFTER `nama`;
 DROP TABLE `toko_ibu`.`kategori_barang`
+ALTER TABLE `user` DROP `username
+
+5/25/2023
+ALTER TABLE `kategori` CHANGE `createdAt` `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+RENAME TABLE `toko_ibu`.`orders` TO `toko_ibu`.`order`;
+RENAME TABLE `toko_ibu`.`order_detail` TO `toko_ibu`.`detail_order`;
