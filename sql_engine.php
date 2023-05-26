@@ -572,17 +572,19 @@ function ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $
 }
 
 function getLastIdTable($idField, $table){
-    $sql = "SELECT count(".$idField.") as jumlah FROM ".$table."";
+    $sql = "SELECT ".$idField." as id FROM ".$table." ORDER BY ".$idField." DESC LIMIT 1";
     $result = coreReturnArray($sql, null);
 
     if (sizeof($result) > 0) {
+        $nLastId = filter_var($result[0]['id'], FILTER_SANITIZE_NUMBER_INT);
         $response['Error'] = 0;
-        $response['data'] = $result[0]['jumlah']+1;
+        $response['data'] = $nLastId+1;
         $response['Message'] = 'Data Berhasil Ditemukan!';
         return json_encode($response);
     }else{
-        $response['Error'] = 1;
-        $response['Message'] = 'Data Tidak Ditemukan!';
+        $response['Error'] = 0;
+        $response['data'] = 1;
+        $response['Message'] = 'Data Berhasil Ditemukan!';
         return json_encode($response);
     }
 }   
