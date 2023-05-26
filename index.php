@@ -23,6 +23,7 @@ require_once __DIR__ . '/api.php';
 
 // ------------------ BARANG
 Flight::route('GET /getdatabarang', 'getDataBarang');
+Flight::route('GET /getdatabarangperkategori', 'getDataBarangPerKategori');
 Flight::route('POST /getdetailbarang', 'getDetailBarang');
 Flight::route('POST /tambahdatabarang', 'tambahDataBarang');
 Flight::route('POST /ubahdatabarang', 'ubahDataBarang');

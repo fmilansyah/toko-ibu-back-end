@@ -52,11 +52,24 @@ function getKategoriDanBarangSQL(){
 
     $result = [];
     foreach ($categories as $category) {
-        $sql = 'SELECT b.*,db.kd_detail_barang,db.varian,db.harga, fb.file FROM barang b
-        INNER JOIN detail_barang db ON b.kd_barang=db.kd_barang
-        INNER JOIN file_barang fb ON b.kd_barang=fb.kd_barang
-        WHERE b.kd_kategori=:kd_kategori AND b.record_status=:record_status GROUP BY b.kd_barang LIMIT 10';
+        $sql = 'SELECT * FROM barang WHERE kd_kategori=:kd_kategori AND record_status=:record_status LIMIT 10';
         $items = coreReturnArray($sql, array(":kd_kategori" => $category['kd_kategori'], ":record_status"=>STATUS_ACTIVE));
+
+        foreach ($items as $key => $item) {
+            $getVariant = 'SELECT * FROM detail_barang WHERE kd_barang=:kd_barang ORDER BY harga ASC LIMIT 1';
+            $variant = coreReturnArray($getVariant, array(":kd_barang" => $item['kd_barang']));
+            if (sizeof($variant) > 0) {
+                $items[$key]['kd_detail_barang'] = $variant[0]['kd_detail_barang'];
+                $items[$key]['varian'] = $variant[0]['varian'];
+                $items[$key]['harga'] = $variant[0]['harga'];
+            }
+
+            $getFiles = 'SELECT * FROM file_barang WHERE kd_barang=:kd_barang ORDER BY created_at ASC LIMIT 1';
+            $files = coreReturnArray($getFiles, array(":kd_barang" => $item['kd_barang']));
+            if (sizeof($files) > 0) {
+                $items[$key]['file'] = $files[0]['file'];
+            }
+        }
 
         if (sizeof($items) > 0) {
             $result[] = [
@@ -71,6 +84,38 @@ function getKategoriDanBarangSQL(){
     if (sizeof($result) > 0) {
         $response['Error'] = 0;
         $response['Kategori'] = $result;
+        $response['Message'] = 'Data Berhasil Ditemukan!';
+        return json_encode($response);
+    }else{
+        $response['Error'] = 1;
+        $response['Message'] = 'Data Tidak Ditemukan!';
+        return json_encode($response);
+    }
+}
+
+function getBarangPerKategoriSQL($kd_kategori){
+    $sql = 'SELECT * FROM barang WHERE kd_kategori=:kd_kategori AND record_status=:record_status';
+    $items = coreReturnArray($sql, array(":kd_kategori" => $kd_kategori, ":record_status"=>STATUS_ACTIVE));
+
+    foreach ($items as $key => $item) {
+        $getVariant = 'SELECT * FROM detail_barang WHERE kd_barang=:kd_barang ORDER BY harga ASC LIMIT 1';
+        $variant = coreReturnArray($getVariant, array(":kd_barang" => $item['kd_barang']));
+        if (sizeof($variant) > 0) {
+            $items[$key]['kd_detail_barang'] = $variant[0]['kd_detail_barang'];
+            $items[$key]['varian'] = $variant[0]['varian'];
+            $items[$key]['harga'] = $variant[0]['harga'];
+        }
+
+        $getFiles = 'SELECT * FROM file_barang WHERE kd_barang=:kd_barang ORDER BY created_at ASC LIMIT 1';
+        $files = coreReturnArray($getFiles, array(":kd_barang" => $item['kd_barang']));
+        if (sizeof($files) > 0) {
+            $items[$key]['file'] = $files[0]['file'];
+        }
+    }
+
+    if (sizeof($items) > 0) {
+        $response['Error'] = 0;
+        $response['Barang'] = $items;
         $response['Message'] = 'Data Berhasil Ditemukan!';
         return json_encode($response);
     }else{
@@ -160,11 +205,17 @@ function getKategoriBarangSQL($kd_kategori){
 
 
 function getDataKeranjangSQL($kd_user){
-    $sql = "SELECT k.kd_keranjang, b.kd_barang,b.nama,db.kd_detail_barang,db.varian,db.harga as harga_satuan,k.jumlah_barang, (db.harga * k.jumlah_barang) as harga_total FROM keranjang k
-                    INNER JOIN detail_barang db ON k.kd_detail_barang=db.kd_detail_barang AND k.kd_user=:kd_user
-                    INNER JOIN barang b ON db.kd_barang=b.kd_barang
-                    ORDER BY k.created_at DESC";
+    $sql = "SELECT k.*, b.kd_barang, b.nama, db.varian, (k.harga_barang * k.jumlah_barang) as harga_total FROM keranjang k INNER JOIN detail_barang db ON k.kd_detail_barang=db.kd_detail_barang AND k.kd_user=:kd_user INNER JOIN barang b ON db.kd_barang=b.kd_barang ORDER BY k.created_at DESC";
     $result = coreReturnArray($sql, array(":kd_user" => $kd_user));
+
+    foreach ($result as $key => $val) {
+        $file_barang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at ASC";
+        $result_file_barang = coreReturnArray($file_barang, array(":kd_barang" => $val['kd_barang']));
+
+        if (sizeof($result_file_barang) > 0) {
+            $result[$key]['file'] = $result_file_barang[0]['file'];
+        }
+    }
 
     if (sizeof($result) > 0) {
         $response['Error'] = 0;
@@ -236,7 +287,7 @@ function getDetailBarangSQL($kd_barang){
     $detail_barang = "SELECT * FROM `detail_barang` WHERE kd_barang=:kd_barang ORDER BY created_at DESC";
     $result_detail_barang = coreReturnArray($detail_barang, array(":kd_barang" => $kd_barang));
 
-    $file_barang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at DESC";
+    $file_barang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at ASC";
     $result_file_barang = coreReturnArray($file_barang, array(":kd_barang" => $kd_barang));
 
     $kategori_barang = "SELECT k.* FROM `kategori` k INNER JOIN barang b ON k.kd_kategori=b.kd_kategori WHERE b.kd_barang=:kd_barang";
@@ -307,7 +358,7 @@ function hapusKeranjangSQL($kd_keranjang){
     }
 }
 
-function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
+function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang, $harga_barang = 0){
 
     $sql = "SELECT * FROM keranjang WHERE kd_user=:kd_user AND kd_detail_barang=:kd_detail_barang";
     $result = coreReturnArray($sql, array(":kd_user" => $kd_user, ":kd_detail_barang" => $kd_detail_barang));
@@ -320,8 +371,8 @@ function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
         $lastId = $getLastId['data'];
         $kd_keranjang = 'KER'.$lastId;
 
-        $sql = "INSERT INTO keranjang(kd_keranjang, kd_user, kd_detail_barang, jumlah_barang) VALUES(:kd_keranjang, :kd_user, :kd_detail_barang, :jumlah_barang)";
-        $result = coreNoReturn($sql, array(":kd_keranjang" => $kd_keranjang, ":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang));    
+        $sql = "INSERT INTO keranjang(kd_keranjang, kd_user, kd_detail_barang, jumlah_barang, harga_barang) VALUES(:kd_keranjang, :kd_user, :kd_detail_barang, :jumlah_barang, :harga_barang)";
+        $result = coreNoReturn($sql, array(":kd_keranjang" => $kd_keranjang, ":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang, ":harga_barang" => $harga_barang));    
     }
     
     if ($result['success'] == 1) {
