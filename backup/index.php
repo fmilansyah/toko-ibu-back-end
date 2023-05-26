@@ -23,7 +23,6 @@ require_once __DIR__ . '/api.php';
 
 // ------------------ BARANG
 Flight::route('GET /getdatabarang', 'getDataBarang');
-Flight::route('GET /getdatabarangperkategori', 'getDataBarangPerKategori');
 Flight::route('POST /getdetailbarang', 'getDetailBarang');
 Flight::route('POST /tambahdatabarang', 'tambahDataBarang');
 Flight::route('POST /ubahdatabarang', 'ubahDataBarang');
@@ -32,6 +31,9 @@ Flight::route('POST /deletedatabarang', 'deleteDataBarang');
 // ------------------ KATEGORI
 Flight::route('GET /getkategori', 'getKategori');
 Flight::route('GET /getkategoridanbarang', 'getKategoriDanBarang');
+// Flight::route('GET /getkategori', function(){
+//     echo 'hello world!';
+// });
 Flight::route('POST /tambahkategori', 'tambahKategori');
 Flight::route('POST /ubahkategori', 'ubahKategori');
 Flight::route('POST /deletekategori', 'deleteKategori');

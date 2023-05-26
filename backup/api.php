@@ -18,31 +18,15 @@ require_once __DIR__ . '/sql_engine.php';
 require_once __DIR__ . '/core/MidtransApi.php';
 
 function getDataBarang(){
-    $barang = new Barang();
-    echo $barang->getDataBarangSQL();
-}
-
-function getDataBarangPerKategori(){
-    if (isset($_GET['kd_kategori'])) {
-        
-        $kd_kategori = htmlspecialchars($_GET['kd_kategori']);
-
-        echo getBarangPerKategoriSQL($kd_kategori);
-    } else {
-        $response["Error"] = 1;
-        $response["Message"] = "1102|required field is missing";
-        echo json_encode($response);
-    }
+    echo getDataBarangSQL();
 }
 
 function getKategoriDanBarang(){
-    $barang = new Barang();
-    echo $barang->getKategoriDanBarangSQL();
+    echo getKategoriDanBarangSQL();
 }
 
 function getKategori(){
-    $kategori = new Kategori();
-    echo $kategori->getKategoriSQL();
+    echo getKategoriSQL();
 }
 
 function setKategoriBarang(){
@@ -51,8 +35,7 @@ function setKategoriBarang(){
         $kategori_barang = json_decode($_POST['kategori_barang'], true);
         $hapus_kategori_barang = json_decode($_POST['hapus_kategori_barang'], true);
 
-        $kategori = new Kategori();
-        echo $kategori->setKategoriBarangSQL($kategori_barang, $hapus_kategori_barang);
+        echo setKategoriBarangSQL($kategori_barang, $hapus_kategori_barang);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -71,8 +54,7 @@ function tambahDataBarang(){
             $listFile = $_FILES['images'];
         }
 
-        $barang = new Barang();
-        echo $barang->tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile);
+        echo tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -89,8 +71,7 @@ function orderBarang(){
         $jasa_pengiriman = htmlspecialchars($_POST['jasa_pengiriman']);
         $jenis_pengiriman = htmlspecialchars($_POST['jenis_pengiriman']);
 
-        $order = new Order();
-        echo $order->orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman);
+        echo orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -103,8 +84,7 @@ function kirimBarang(){
         $kd_order = htmlspecialchars($_POST['kd_order']);
         $no_resi = htmlspecialchars($_POST['no_resi']);
 
-        $order = new Order();
-        echo $order->kirimBarangSQL($kd_order, $no_resi);
+        echo kirimBarangSQL($kd_order, $no_resi);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -116,14 +96,16 @@ function selesaiOrder(){
     if (isset($_POST['kd_order'])) {
         $kd_order = htmlspecialchars($_POST['kd_order']);
 
-        $order = new Order();
-        echo $order->selesaiOrderSQL($kd_order);
+        echo selesaiOrderSQL($kd_order);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
         echo json_encode($response);
     }
 }
+
+
+
 
 function ubahUser(){
     if (isset($_POST['kd_user'], $_POST['nama'], $_POST['no_telepon'])) {
@@ -140,8 +122,7 @@ function ubahUser(){
             $foto_profil = $_FILES['foto_profil'];
         }
 
-        $user = new User();
-        echo $user->ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil);
+        echo ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -155,8 +136,7 @@ function daftarUser(){
         $no_telepon = htmlspecialchars($_POST['no_telepon']);
         $password = md5(htmlspecialchars($_POST['password']));
 
-        $user = new User();
-        echo $user->daftarUserSQL($nama, $no_telepon, $password);
+        echo daftarUserSQL($nama, $no_telepon, $password);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -169,10 +149,8 @@ function tambahKeranjang(){
         $kd_user = htmlspecialchars($_POST['kd_user']);
         $kd_detail_barang = htmlspecialchars($_POST['kd_detail_barang']);
         $jumlah_barang = htmlspecialchars($_POST['jumlah_barang']);
-        $harga_barang = isset($_POST['harga_barang']) ? htmlspecialchars($_POST['harga_barang']) : 0;
 
-        $keranjang = new Keranjang();
-        echo $keranjang->tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang, $harga_barang);
+        echo tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -184,8 +162,7 @@ function getDataKeranjang(){
     if (isset($_POST['kd_user'])) {
         $kd_user = htmlspecialchars($_POST['kd_user']);
 
-        $keranjang = new Keranjang();
-        echo $keranjang->getDataKeranjangSQL($kd_user);
+        echo getDataKeranjangSQL($kd_user);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -197,22 +174,22 @@ function hapusKeranjang(){
     if (isset($_POST['kd_keranjang'])) {
         $kd_keranjang = htmlspecialchars($_POST['kd_keranjang']);
 
-        $keranjang = new Keranjang();
-        echo $keranjang->hapusKeranjangSQL($kd_keranjang);
+        echo hapusKeranjangSQL($kd_keranjang);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
         echo json_encode($response);
     }
 }
+
+
 
 function login(){
     if (isset($_POST['no_telepon'], $_POST['password'])) {
         $no_telepon = htmlspecialchars($_POST['no_telepon']);
         $password = md5(htmlspecialchars($_POST['password']));
 
-        $user = new User();
-        echo $user->loginSQL($no_telepon, $password);
+        echo loginSQL($no_telepon, $password);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -220,13 +197,13 @@ function login(){
     }
 }
 
+
 function tambahKategori(){
     if (isset($_POST['nama'], $_POST['keterangan'])) {
         $nama = htmlspecialchars($_POST['nama']);
         $keterangan = htmlspecialchars($_POST['keterangan']);
         
-        $kategori = new Kategori();
-        echo $kategori->tambahKategoriSQL($nama, $keterangan);
+        echo tambahKategoriSQL($nama, $keterangan);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -248,8 +225,7 @@ function ubahDataBarang(){
             $listFile = $_FILES['images'];
         }
 
-        $barang = new Barang();
-        echo $barang->ubahDataBarangSQL($kd_barang, $nama, $kd_kategori, $ukuran, $hapus_ukuran, $hapus_file, $listFile);
+        echo ubahDataBarangSQL($kd_barang, $nama, $kd_kategori, $ukuran, $hapus_ukuran, $hapus_file, $listFile);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -263,45 +239,19 @@ function ubahKategori(){
         $nama = htmlspecialchars($_POST['nama']);
         $keterangan = htmlspecialchars($_POST['keterangan']);
         
-        $kategori = new Kategori();
-        echo $kategori->ubahKategoriSQL($kd_kategori, $nama, $keterangan);
+        echo ubahKategoriSQL($kd_kategori, $nama, $keterangan);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
         echo json_encode($response);
     }
 }
+
 
 function deleteDataBarang(){
     if (isset($_POST['kd_barang'])) {
         $kd_barang = htmlspecialchars($_POST['kd_barang']);
-        
-        $barang = new Barang();
-        echo $barang->deleteDataBarangSQL($kd_barang);
-    } else {
-        $response["Error"] = 1;
-        $response["Message"] = "1102|required field is missing";
-        echo json_encode($response);
-    }
-}
-
-function getDetailBarang(){
-    if (isset($_POST['kd_barang'])) {
-        $kd_barang = htmlspecialchars($_POST['kd_barang']);
-        $barang = new Barang();
-        echo $barang->getDetailBarangSQL($kd_barang);
-    } else {
-        $response["Error"] = 1;
-        $response["Message"] = "1102|required field is missing";
-        echo json_encode($response);
-    }
-}
-
-function getKategoriBarang(){
-    if (isset($_POST['kd_kategori'])) {
-        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
-        $kategori = new Kategori();
-        echo $kategori->getKategoriBarangSQL($kd_kategori);
+        echo deleteDataBarangSQL($kd_barang);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -312,9 +262,7 @@ function getKategoriBarang(){
 function deleteKategori(){
     if (isset($_POST['kd_kategori'])) {
         $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
-        
-        $kategori = new Kategori();
-        echo $kategori->deleteKategoriSQL($kd_kategori);
+        echo deleteKategoriSQL($kd_kategori);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -322,7 +270,27 @@ function deleteKategori(){
     }
 }
 
+function getKategoriBarang(){
+    if (isset($_POST['kd_kategori'])) {
+        $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
+        echo getKategoriBarangSQL($kd_kategori);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
 
+function getDetailBarang(){
+    if (isset($_POST['kd_barang'])) {
+        $kd_barang = htmlspecialchars($_POST['kd_barang']);
+        echo getDetailBarangSQL($kd_barang);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
 
 
 ?>
