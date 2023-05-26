@@ -27,7 +27,8 @@ function getDataBarangPerKategori(){
         
         $kd_kategori = htmlspecialchars($_GET['kd_kategori']);
 
-        echo getBarangPerKategoriSQL($kd_kategori);
+        $barang = new Barang();
+        echo $barang->getBarangPerKategoriSQL($kd_kategori);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
