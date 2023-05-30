@@ -709,11 +709,18 @@ class User {
                                     WHERE `kd_user`=:kd_user";
             $result = coreNoReturn($sql, array(":kd_user"=>$kd_user, ":nama"=>$nama, ":email"=>$email, 
             ":no_telepon"=>$no_telepon, ":alamat"=>$alamat, ":foto_profil"=>$fp, ":kode_pos"=>$kode_pos));
-            $response['fp'] = $fp;
+            // $response['fp'] = $fp;
         }
         
     
         if ($result['success'] == 1) {
+
+            $SQLuser = "SELECT * FROM `user` WHERE kd_user=:kd_user";
+            $result_user = coreReturnArray($SQLuser, array(":kd_user" => $kd_user));
+            if (sizeof($result_user) > 0) {
+                $response['user'] = $result_user[0];
+            }
+
             $response['Error'] = 0;
             $response['Message'] = "Berhasil Mengubah User!";
             return json_encode($response);
@@ -772,6 +779,7 @@ function uploadFileSQL2($file){
     }
 
     $filename = $file['name'];    
+    $filename = hilangSimbol($filename);
     // file extension
     $file_extension = pathinfo($filename, PATHINFO_EXTENSION);
     $file_extension = strtolower($file_extension);
