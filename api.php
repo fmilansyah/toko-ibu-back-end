@@ -22,6 +22,20 @@ function getDataBarang(){
     echo $barang->getDataBarangSQL();
 }
 
+function getDataBarangPerKategori(){
+    if (isset($_GET['kd_kategori'])) {
+        
+        $kd_kategori = htmlspecialchars($_GET['kd_kategori']);
+
+        $barang = new Barang();
+        echo $barang->getBarangPerKategoriSQL($kd_kategori);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
 function getKategoriDanBarang(){
     $barang = new Barang();
     echo $barang->getKategoriDanBarangSQL();
@@ -156,9 +170,10 @@ function tambahKeranjang(){
         $kd_user = htmlspecialchars($_POST['kd_user']);
         $kd_detail_barang = htmlspecialchars($_POST['kd_detail_barang']);
         $jumlah_barang = htmlspecialchars($_POST['jumlah_barang']);
+        $harga_barang = isset($_POST['harga_barang']) ? htmlspecialchars($_POST['harga_barang']) : 0;
 
         $keranjang = new Keranjang();
-        echo $keranjang->tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang);
+        echo $keranjang->tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang, $harga_barang);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
