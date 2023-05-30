@@ -16,6 +16,7 @@ if ($method == "OPTIONS") {
 // ini_set('memory_limit', '-1');
 date_default_timezone_set('Asia/Jakarta');
 require_once __DIR__ . '/core/core.php';
+require_once __DIR__ . '/core/MidtransApi.php';
 
 const STATUS_ACTIVE = 'A';
 
@@ -675,8 +676,16 @@ class Order {
         
         $status_pembayaran = 'LUNAS';
         $status_order = 'PROSES';
-        $sqlOrder = "INSERT INTO orders(kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order)";
-        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order));
+        $snapData = [
+            'transaction_details' => [
+                'order_id' => $kd_order,
+                'gross_amount' => $total_akhir,
+            ],
+        ];
+        $midtrans = new MidtransApi();
+        $pay = $midtrans->request(MidtransApi::TYPE_SNAP, 'POST', '/snap/v1/transactions', $snapData);
+        $sqlOrder = "INSERT INTO orders(kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token)";
+        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $pay['body']['token']));
     
         if ($resultOrder['success'] == 1) {
     
@@ -685,7 +694,8 @@ class Order {
                 $resultOrderDetail = coreNoReturn($sqlOrderDetail, array(":kd_order" => $kd_order, ":kd_detail_barang" => $value['kd_detail_barang'], ":jumlah_barang" => $value['jumlah_barang'], ":total_harga" => $value['harga_total']));            
     
                 if($jenis_order == 'keranjang'){
-                    $cobaHapusKeranjang = json_decode(hapusKeranjangOrder($value['kd_detail_barang'], $kd_user));
+                    $keranjang = new Keranjang();
+                    $cobaHapusKeranjang = json_decode($keranjang->hapusKeranjangOrder($value['kd_detail_barang'], $kd_user));
                 }
             }
     
@@ -694,6 +704,7 @@ class Order {
             // $response['orders'] = $orders;
             $jenis_order == 'keranjang' ? $response['cobaHapusKeranjang'] = $cobaHapusKeranjang : '';
             $response['Message'] = "Berhasil Order Barang!";
+            $response['token'] = $pay['body']['token'];
             return json_encode($response);
         } else {
             $response['Error'] = 1;
@@ -797,8 +808,9 @@ function getLastIdTable($idField, $table){
         $response['Message'] = 'Data Berhasil Ditemukan!';
         return json_encode($response);
     }else{
+        $response['data'] = 1;
         $response['Error'] = 1;
-        $response['Message'] = 'Data Tidak Ditemukan!';
+        $response['Message'] = 'Data Berhasil Ditemukan!';
         return json_encode($response);
     }
 }   
