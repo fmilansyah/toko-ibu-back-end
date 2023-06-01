@@ -43,6 +43,7 @@ Flight::route('POST /setkategoribarang', 'setKategoriBarang');
 // ----------------- USER
 Flight::route('POST /daftaruser', 'daftarUser');
 Flight::route('POST /ubahuser', 'ubahUser');
+Flight::route('POST /ubahstatususer', 'ubahStatusUser');
 Flight::route('POST /login', 'login');
 
 // ----------------- KERANJANG

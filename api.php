@@ -150,6 +150,20 @@ function ubahUser(){
     }
 }
 
+function ubahStatusUser(){
+    if (isset($_POST['kd_user'], $_POST['record_status'])) {
+        $kd_user = htmlspecialchars($_POST['kd_user']);
+        $record_status = htmlspecialchars($_POST['record_status']);
+
+        $user = new User();
+        echo $user->ubahStatusUserSQL($kd_user, $record_status);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
 function daftarUser(){
     if (isset($_POST['nama'], $_POST['no_telepon'], $_POST['password'])) {
         $nama = htmlspecialchars($_POST['nama']);
@@ -170,10 +184,10 @@ function tambahKeranjang(){
         $kd_user = htmlspecialchars($_POST['kd_user']);
         $kd_detail_barang = htmlspecialchars($_POST['kd_detail_barang']);
         $jumlah_barang = htmlspecialchars($_POST['jumlah_barang']);
-        $harga_barang = isset($_POST['harga_barang']) ? htmlspecialchars($_POST['harga_barang']) : 0;
+        // $harga_barang = isset($_POST['harga_barang']) ? htmlspecialchars($_POST['harga_barang']) : 0;
 
         $keranjang = new Keranjang();
-        echo $keranjang->tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang, $harga_barang);
+        echo $keranjang->tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";

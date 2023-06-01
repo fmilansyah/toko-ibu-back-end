@@ -370,7 +370,7 @@ class Barang{
 
 class Keranjang {
     public function getDataKeranjangSQL($kd_user){
-        $sql = "SELECT k.*, b.kd_barang, b.nama, db.varian, (k.harga_barang * k.jumlah_barang) as harga_total FROM keranjang k INNER JOIN detail_barang db ON k.kd_detail_barang=db.kd_detail_barang AND k.kd_user=:kd_user INNER JOIN barang b ON db.kd_barang=b.kd_barang ORDER BY k.created_at DESC";
+        $sql = "SELECT k.*, b.kd_barang, b.nama, db.varian, (db.harga * k.jumlah_barang) as harga_total FROM keranjang k INNER JOIN detail_barang db ON k.kd_detail_barang=db.kd_detail_barang AND k.kd_user=:kd_user INNER JOIN barang b ON db.kd_barang=b.kd_barang ORDER BY k.created_at DESC";
         $result = coreReturnArray($sql, array(":kd_user" => $kd_user));
 
         foreach ($result as $key => $val) {
@@ -443,7 +443,7 @@ class Keranjang {
         
     }
 
-    public function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang, $harga_barang = 0){
+    public function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
 
         $sql = "SELECT * FROM keranjang WHERE kd_user=:kd_user AND kd_detail_barang=:kd_detail_barang";
         $result = coreReturnArray($sql, array(":kd_user" => $kd_user, ":kd_detail_barang" => $kd_detail_barang));
@@ -456,8 +456,8 @@ class Keranjang {
             $lastId = $getLastId['data'];
             $kd_keranjang = 'KER'.$lastId;
 
-            $sql = "INSERT INTO keranjang(kd_keranjang, kd_user, kd_detail_barang, jumlah_barang, harga_barang) VALUES(:kd_keranjang, :kd_user, :kd_detail_barang, :jumlah_barang, :harga_barang)";
-            $result = coreNoReturn($sql, array(":kd_keranjang" => $kd_keranjang, ":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang, ":harga_barang" => $harga_barang));    
+            $sql = "INSERT INTO keranjang(kd_keranjang, kd_user, kd_detail_barang, jumlah_barang) VALUES(:kd_keranjang, :kd_user, :kd_detail_barang, :jumlah_barang)";
+            $result = coreNoReturn($sql, array(":kd_keranjang" => $kd_keranjang, ":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang));    
         }
         
         if ($result['success'] == 1) {
@@ -778,6 +778,21 @@ class User {
         } else {
             $response['Error'] = 1;
             $response['Message'] = "Gagal Mengubah User!";
+            return json_encode($response);
+        }
+    }
+
+    public function ubahStatusUserSQL($kd_user, $record_status){
+        $sql = "UPDATE `user` SET `record_status`=:record_status WHERE `kd_user`=:kd_user";
+        $result = coreNoReturn($sql, array(":kd_user"=>$kd_user, ":record_status"=>$record_status));
+        
+        if ($result['success'] == 1) {
+            $response['Error'] = 0;
+            $response['Message'] = "Berhasil Mengubah Status User!";
+            return json_encode($response);
+        } else {
+            $response['Error'] = 1;
+            $response['Message'] = "Gagal Mengubah Status User!";
             return json_encode($response);
         }
     }

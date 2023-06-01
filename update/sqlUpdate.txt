@@ -23,3 +23,7 @@ ALTER TABLE `user` DROP `username
 ALTER TABLE `kategori` CHANGE `createdAt` `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 RENAME TABLE `toko_ibu`.`orders` TO `toko_ibu`.`order`;
 RENAME TABLE `toko_ibu`.`order_detail` TO `toko_ibu`.`detail_order`;
+
+6/1/2023
+ALTER TABLE `keranjang` DROP `record_status`;
+ALTER TABLE `keranjang` DROP `harga_barang`;
