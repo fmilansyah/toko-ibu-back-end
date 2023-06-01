@@ -15,7 +15,6 @@ if ($method == "OPTIONS") {
 ini_set('memory_limit', '-1');
 
 require_once __DIR__ . '/sql_engine.php';
-require_once __DIR__ . '/core/MidtransApi.php';
 
 function getDataBarang(){
     $barang = new Barang();

@@ -4,12 +4,17 @@ use GuzzleHttp\Client;
 
 class MidtransApi
 {
-    private static $baseUrl = 'https://api.sandbox.midtrans.com';
-    private static $serverKey = ''; // Do not commit server key
+    const TYPE_API = 'core-api';
+    const TYPE_SNAP = 'snap';
+
+    private static $baseUrl;
+    private static $serverKey = 'SB-Mid-server-B10Vf9nLcjUPI9PTAxP0ndye'; // Do not commit server key
     private static $client;
+    private static $type;
 
     private static function setClient($data = null)
     {
+        self::getBaseUrl();
         self::$client = new Client([
             'base_uri' => self::$baseUrl,
             'timeout' => 30,
@@ -22,9 +27,21 @@ class MidtransApi
         ]);
     }
 
-    public static function request($method = 'GET', $url = null, $data = [])
+    private static function getBaseUrl()
+    {
+        if (self::$type === self::TYPE_API) {
+            self::$baseUrl = 'https://api.sandbox.midtrans.com';
+        }
+
+        if (self::$type === self::TYPE_SNAP) {
+            self::$baseUrl = 'https://app.sandbox.midtrans.com';
+        }
+    }
+
+    public static function request($type, $method = 'GET', $url = null, $data = [])
     {
         try {
+            self::$type = $type;
             self::setClient($data);
             $response = self::$client->request($method, $url, [
                 'body' => json_encode($data, 1),
