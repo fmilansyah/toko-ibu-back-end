@@ -80,6 +80,20 @@ function tambahDataBarang(){
     }
 }
 
+function getListOrder(){
+    if (isset($_POST['status_order'])) {
+        $status_order = htmlspecialchars($_POST['status_order']);
+
+        $order = new Order();
+        echo $order->getListOrderSQL($status_order);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+    
+}
+
 function orderBarang(){
     if (isset($_POST['kd_user'], $_POST['orders'], $_POST['jenis_order'], $_POST['jasa_pengiriman'], $_POST['jenis_pengiriman'])) {
         $kd_user = htmlspecialchars($_POST['kd_user']);
