@@ -752,6 +752,48 @@ class Order {
             return json_encode($response);
         }
     }
+
+    public function getUserOrderSQL($kd_user){
+        $sqlOrder = 'SELECT kd_order, created_at, total_akhir, status_order FROM orders WHERE kd_user=:kd_user ORDER BY created_at DESC';
+        $resultOrder = coreReturnArray($sqlOrder, array(":kd_user" => $kd_user));
+
+        if (sizeof($resultOrder) > 0) {
+            foreach ($resultOrder as $key => $val) {
+                $sqlDetailOrder = "SELECT od.kd_order,
+                                          od.kd_detail_barang,
+                                          od.jumlah_barang,
+                                          od.total_harga,
+                                          db.kd_barang,
+                                          db.varian,
+                                          b.nama
+                                    FROM order_detail od
+                                    INNER JOIN detail_barang db ON od.kd_detail_barang = db.kd_detail_barang
+                                    INNER JOIN barang b ON db.kd_barang = b.kd_barang
+                                    WHERE od.kd_order=:kd_order";
+                $resultDetailOrder = coreReturnArray($sqlDetailOrder, array(":kd_order" => $val['kd_order']));
+
+                if (sizeof($resultDetailOrder) > 0) {
+                    $sqlFiles = 'SELECT * FROM file_barang WHERE kd_barang=:kd_barang ORDER BY created_at ASC LIMIT 1';
+                    $resultFiles = coreReturnArray($sqlFiles, array(":kd_barang" => $resultDetailOrder[0]['kd_barang']));
+                    if (sizeof($resultFiles) > 0) {
+                        $resultDetailOrder[0]['file'] = $resultFiles[0]['file'];
+                    }
+
+                    $resultOrder[$key]['barang'] = $resultDetailOrder[0];
+                }
+
+                $resultOrder[$key]['jumlah_produk'] = sizeof($resultDetailOrder);
+            }
+            $response['listOrder'] = $resultOrder;
+            $response['Error'] = 0;
+            $response['Message'] = 'Data Berhasil Ditemukan!';
+            return json_encode($response);
+        }else{
+            $response['Error'] = 1;
+            $response['Message'] = 'Data Tidak Ditemukan!';
+            return json_encode($response);
+        }
+    }
 }
 
 class User {

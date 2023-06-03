@@ -94,6 +94,20 @@ function getListOrder(){
     
 }
 
+function getUserOrder(){
+    if (isset($_POST['kd_user'])) {
+        $kd_user = htmlspecialchars($_POST['kd_user']);
+
+        $order = new Order();
+        echo $order->getUserOrderSQL($kd_user);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+    
+}
+
 function orderBarang(){
     if (isset($_POST['kd_user'], $_POST['orders'], $_POST['jenis_order'], $_POST['jasa_pengiriman'], $_POST['jenis_pengiriman'])) {
         $kd_user = htmlspecialchars($_POST['kd_user']);
