@@ -57,6 +57,8 @@ Flight::route('POST /kirimbarang', 'kirimBarang');
 Flight::route('POST /selesaiorder', 'selesaiOrder');
 Flight::route('POST /getlistorder', 'getListOrder');
 
+// ---------------- MIDTRANS
+Flight::route('POST /midtrans-createtoken', 'midtransCreateToken');
 
 Flight::start();
 ?>

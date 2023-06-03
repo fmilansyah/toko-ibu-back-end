@@ -103,8 +103,10 @@ function orderBarang(){
         $jasa_pengiriman = htmlspecialchars($_POST['jasa_pengiriman']);
         $jenis_pengiriman = htmlspecialchars($_POST['jenis_pengiriman']);
 
+        $midtrans_token = isset($_POST['midtrans_token']) ? htmlspecialchars($_POST['midtrans_token']) : null;
+
         $order = new Order();
-        echo $order->orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman);
+        echo $order->orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -350,7 +352,18 @@ function deleteKategori(){
     }
 }
 
+function midtransCreateToken(){
+    if (isset($_POST['total']) && isset($_POST['kd_user'])) {
+        $total = htmlspecialchars($_POST['total']);
+        $kdUser = htmlspecialchars($_POST['kd_user']);
 
-
+        $midtrans = new Midtrans();
+        echo $midtrans->createToken($kdUser, $total);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
 
 ?>
