@@ -184,17 +184,19 @@ class Barang{
                     $lastId = $getLastId['data'];
                     $kd_detail_barang = 'DB'.$lastId;
     
-                    $sql_i_Ukuran = "INSERT INTO `detail_barang`(`kd_detail_barang`, `kd_barang`, `varian`, `stok`, `harga`) 
-                            VALUES (:kd_detail_barang, :kd_barang, :varian, :stok, :harga)";
+                    $sql_i_Ukuran = "INSERT INTO `detail_barang`(`kd_detail_barang`, `kd_barang`, `varian`, `stok`, `harga`, `berat_satuan`) 
+                            VALUES (:kd_detail_barang, :kd_barang, :varian, :stok, :harga, :berat_satuan)";
                     $result_i_ukuran = coreNoReturn($sql_i_Ukuran, array(
                                                         ":kd_detail_barang" => $kd_detail_barang, 
                                                         ":kd_barang" => $kd_barang, 
                                                         ":varian" => $data['varian'],
                                                         ":stok" => $data['stok'],
-                                                        ":harga" => $data['harga']
+                                                        ":harga" => $data['harga'],
+                                                        ":berat_satuan" => $data['berat_satuan']
                     ));
                     if ($result_i_ukuran['success'] == 1) {
                         $hitung_input_ukuran++;
+                        sleep(1);
                     }
                 }
                 if($jumlah_ukuran == $hitung_input_ukuran){
@@ -237,6 +239,7 @@ class Barang{
                         }
                         
                         $hitung_upload++;
+                        sleep(1);
                     }
                 }
                 if($jumlah_i_file == $hitung_upload){
