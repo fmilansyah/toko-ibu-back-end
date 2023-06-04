@@ -667,7 +667,7 @@ class Order {
         }
     }
     
-    public function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman){
+    public function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token = null){
         $getLastId = json_decode(getLastIdTable('kd_order', 'orders'), true);
         $lastId = $getLastId['data'];
         $kd_order = 'O'.$lastId;
@@ -679,16 +679,12 @@ class Order {
         
         $status_pembayaran = 'LUNAS';
         $status_order = 'PROSES';
-        $snapData = [
-            'transaction_details' => [
-                'order_id' => $kd_order,
-                'gross_amount' => $total_akhir,
-            ],
-        ];
-        $midtrans = new MidtransApi();
-        $pay = $midtrans->request(MidtransApi::TYPE_SNAP, 'POST', '/snap/v1/transactions', $snapData);
+        if ($midtrans_token) {
+            $status_pembayaran = 'MENUNGGU PEMBAYARAN';
+            $status_order = 'MENUNGGU PEMBAYARAN';
+        }
         $sqlOrder = "INSERT INTO orders(kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token)";
-        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $pay['body']['token']));
+        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $midtrans_token));
     
         if ($resultOrder['success'] == 1) {
     
@@ -707,7 +703,6 @@ class Order {
             // $response['orders'] = $orders;
             $jenis_order == 'keranjang' ? $response['cobaHapusKeranjang'] = $cobaHapusKeranjang : '';
             $response['Message'] = "Berhasil Order Barang!";
-            $response['token'] = $pay['body']['token'];
             return json_encode($response);
         } else {
             $response['Error'] = 1;
@@ -751,6 +746,48 @@ class Order {
             }
 
             $response['listOrder'] = $listOrder;
+            $response['Error'] = 0;
+            $response['Message'] = 'Data Berhasil Ditemukan!';
+            return json_encode($response);
+        }else{
+            $response['Error'] = 1;
+            $response['Message'] = 'Data Tidak Ditemukan!';
+            return json_encode($response);
+        }
+    }
+
+    public function getUserOrderSQL($kd_user){
+        $sqlOrder = 'SELECT kd_order, created_at, total_akhir, status_order FROM orders WHERE kd_user=:kd_user ORDER BY created_at DESC';
+        $resultOrder = coreReturnArray($sqlOrder, array(":kd_user" => $kd_user));
+
+        if (sizeof($resultOrder) > 0) {
+            foreach ($resultOrder as $key => $val) {
+                $sqlDetailOrder = "SELECT od.kd_order,
+                                          od.kd_detail_barang,
+                                          od.jumlah_barang,
+                                          od.total_harga,
+                                          db.kd_barang,
+                                          db.varian,
+                                          b.nama
+                                    FROM order_detail od
+                                    INNER JOIN detail_barang db ON od.kd_detail_barang = db.kd_detail_barang
+                                    INNER JOIN barang b ON db.kd_barang = b.kd_barang
+                                    WHERE od.kd_order=:kd_order";
+                $resultDetailOrder = coreReturnArray($sqlDetailOrder, array(":kd_order" => $val['kd_order']));
+
+                if (sizeof($resultDetailOrder) > 0) {
+                    $sqlFiles = 'SELECT * FROM file_barang WHERE kd_barang=:kd_barang ORDER BY created_at ASC LIMIT 1';
+                    $resultFiles = coreReturnArray($sqlFiles, array(":kd_barang" => $resultDetailOrder[0]['kd_barang']));
+                    if (sizeof($resultFiles) > 0) {
+                        $resultDetailOrder[0]['file'] = $resultFiles[0]['file'];
+                    }
+
+                    $resultOrder[$key]['barang'] = $resultDetailOrder[0];
+                }
+
+                $resultOrder[$key]['jumlah_produk'] = sizeof($resultDetailOrder);
+            }
+            $response['listOrder'] = $resultOrder;
             $response['Error'] = 0;
             $response['Message'] = 'Data Berhasil Ditemukan!';
             return json_encode($response);
@@ -854,6 +891,26 @@ class User {
             $response['Message'] = "Gagal Mengubah Status User!";
             return json_encode($response);
         }
+    }
+}
+
+class Midtrans {
+    public function createToken($userCode, $total)
+    {
+        $snapData = [
+            'transaction_details' => [
+                'order_id' => $userCode . random_int(100000, 999999),
+                'gross_amount' => $total,
+            ],
+        ];
+        $midtrans = new MidtransApi();
+        $pay = $midtrans->request(MidtransApi::TYPE_SNAP, 'POST', '/snap/v1/transactions', $snapData);
+        $response['status'] = 201;
+        $response['message'] = "Successfully Added Order To Midtrans";
+        $response['data'] = [
+            'token' => $pay['body']['token'],
+        ];
+        return json_encode($response);
     }
 }
 
