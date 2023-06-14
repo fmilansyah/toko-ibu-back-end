@@ -27,3 +27,6 @@ RENAME TABLE `toko_ibu`.`order_detail` TO `toko_ibu`.`detail_order`;
 6/1/2023
 ALTER TABLE `keranjang` DROP `record_status`;
 ALTER TABLE `keranjang` DROP `harga_barang`;
+
+6/4/2023
+ALTER TABLE `detail_barang` ADD `berat_satuan` INT NULL DEFAULT NULL COMMENT 'gram' AFTER `harga`;
