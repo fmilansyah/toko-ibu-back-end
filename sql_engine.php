@@ -165,6 +165,38 @@ class Barang{
         }
     }
 
+    public function getBarangTerbaru(){
+        $sql = 'SELECT * FROM barang WHERE record_status=:record_status ORDER BY created_at DESC LIMIT 10';
+        $items = coreReturnArray($sql, array(":record_status"=>STATUS_ACTIVE));
+    
+        foreach ($items as $key => $item) {
+            $getVariant = 'SELECT * FROM detail_barang WHERE kd_barang=:kd_barang ORDER BY harga ASC LIMIT 1';
+            $variant = coreReturnArray($getVariant, array(":kd_barang" => $item['kd_barang']));
+            if (sizeof($variant) > 0) {
+                $items[$key]['kd_detail_barang'] = $variant[0]['kd_detail_barang'];
+                $items[$key]['varian'] = $variant[0]['varian'];
+                $items[$key]['harga'] = $variant[0]['harga'];
+            }
+    
+            $getFiles = 'SELECT * FROM file_barang WHERE kd_barang=:kd_barang ORDER BY created_at ASC LIMIT 1';
+            $files = coreReturnArray($getFiles, array(":kd_barang" => $item['kd_barang']));
+            if (sizeof($files) > 0) {
+                $items[$key]['file'] = $files[0]['file'];
+            }
+        }
+    
+        if (sizeof($items) > 0) {
+            $response['Error'] = 0;
+            $response['Barang'] = $items;
+            $response['Message'] = 'Data Berhasil Ditemukan!';
+            return json_encode($response);
+        }else{
+            $response['Error'] = 1;
+            $response['Message'] = 'Data Tidak Ditemukan!';
+            return json_encode($response);
+        }
+    }
+
     public function tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile){
 
         $getLastId = json_decode(getLastIdTable('kd_barang', 'barang'), true);

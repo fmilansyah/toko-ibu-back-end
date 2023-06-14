@@ -28,6 +28,7 @@ Flight::route('POST /getdetailbarang', 'getDetailBarang');
 Flight::route('POST /tambahdatabarang', 'tambahDataBarang');
 Flight::route('POST /ubahdatabarang', 'ubahDataBarang');
 Flight::route('POST /deletedatabarang', 'deleteDataBarang');
+Flight::route('GET /getbarangterbaru', 'getbarangterbaru');
 
 // ------------------ KATEGORI
 Flight::route('GET /getkategori', 'getKategori');

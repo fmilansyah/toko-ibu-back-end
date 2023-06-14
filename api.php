@@ -21,6 +21,11 @@ function getDataBarang(){
     echo $barang->getDataBarangSQL();
 }
 
+function getBarangTerbaru(){
+    $barang = new Barang();
+    echo $barang->getBarangTerbaru();
+}
+
 function getDataBarangPerKategori(){
     if (isset($_GET['kd_kategori'])) {
         
