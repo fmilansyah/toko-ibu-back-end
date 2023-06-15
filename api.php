@@ -21,6 +21,12 @@ function getDataBarang(){
     echo $barang->getDataBarangSQL();
 }
 
+function getBarangTerbaru(){
+    $search = isset($_GET['search']) ? $_GET['search'] : null;
+    $barang = new Barang();
+    echo $barang->getBarangTerbaru($search);
+}
+
 function getDataBarangPerKategori(){
     if (isset($_GET['kd_kategori'])) {
         
