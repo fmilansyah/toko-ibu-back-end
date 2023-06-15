@@ -165,8 +165,12 @@ class Barang{
         }
     }
 
-    public function getBarangTerbaru(){
-        $sql = 'SELECT * FROM barang WHERE record_status=:record_status ORDER BY created_at DESC LIMIT 10';
+    public function getBarangTerbaru($search = null){
+        $sql = 'SELECT * FROM barang WHERE record_status=:record_status ';
+        if ($search) {
+            $sql .= "AND nama LIKE '%".$search."%'";
+        }
+        $sql .= 'ORDER BY created_at DESC LIMIT 10';
         $items = coreReturnArray($sql, array(":record_status"=>STATUS_ACTIVE));
     
         foreach ($items as $key => $item) {

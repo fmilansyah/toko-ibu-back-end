@@ -22,8 +22,9 @@ function getDataBarang(){
 }
 
 function getBarangTerbaru(){
+    $search = isset($_GET['search']) ? $_GET['search'] : null;
     $barang = new Barang();
-    echo $barang->getBarangTerbaru();
+    echo $barang->getBarangTerbaru($search);
 }
 
 function getDataBarangPerKategori(){
