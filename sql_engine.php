@@ -399,9 +399,9 @@ class Keranjang {
         }
     }
     
-    public function hapusKeranjangSQL($kd_keranjang){
-        $sql = "SELECT * FROM keranjang WHERE kd_keranjang=:kd_keranjang";
-        $result = coreReturnArray($sql, array(":kd_keranjang" => $kd_keranjang));
+    public function hapusKeranjangSQL($kd_user, $kd_detail_barang){
+        $sql = "SELECT * FROM keranjang WHERE kd_user=:kd_user AND kd_detail_barang=:kd_detail_barang";
+        $result = coreReturnArray($sql, array(":kd_user" => $kd_user, ":kd_detail_barang" => $kd_detail_barang));
         
         if (sizeof($result) > 0) {
             $kd_detail_barang = $result[0]['kd_detail_barang'];
@@ -412,8 +412,8 @@ class Keranjang {
             if ($resultUpdateStok['success'] == 1) {
                 $response['MessageUpdateStok'] = "Berhasil Mengembalikan Stok Barang!";
 
-                $sql_delete_keranjang = "DELETE FROM keranjang WHERE `kd_keranjang`=:kd_keranjang";
-                $result_delete_keranjang = coreNoReturn($sql_delete_keranjang, array(":kd_keranjang"=>$kd_keranjang));
+                $sql_delete_keranjang = "DELETE FROM keranjang WHERE kd_user=:kd_user AND kd_detail_barang=:kd_detail_barang";
+                $result_delete_keranjang = coreNoReturn($sql_delete_keranjang, array(":kd_user" => $kd_user, ":kd_detail_barang" => $kd_detail_barang));
                 if ($result_delete_keranjang['success'] == 1) {
                     $response['Error'] = 0;
                     $response['Message'] = "Berhasil Menghapus Barang Dari Keranjang!";
@@ -430,6 +430,38 @@ class Keranjang {
             return json_encode($response);
         }
     }
+
+    // public function hapusKeranjangSQL($kd_keranjang){
+    //     $sql = "SELECT * FROM keranjang WHERE kd_keranjang=:kd_keranjang";
+    //     $result = coreReturnArray($sql, array(":kd_keranjang" => $kd_keranjang));
+        
+    //     if (sizeof($result) > 0) {
+    //         $kd_detail_barang = $result[0]['kd_detail_barang'];
+    //         $jumlah_barang = $result[0]['jumlah_barang'];
+
+    //         $sqlUpdateStok = "UPDATE `detail_barang` db SET `stok`=db.stok+".intval($jumlah_barang)." WHERE `kd_detail_barang`=:kd_detail_barang";
+    //         $resultUpdateStok = coreNoReturn($sqlUpdateStok, array(":kd_detail_barang"=>$kd_detail_barang));
+    //         if ($resultUpdateStok['success'] == 1) {
+    //             $response['MessageUpdateStok'] = "Berhasil Mengembalikan Stok Barang!";
+
+    //             $sql_delete_keranjang = "DELETE FROM keranjang WHERE `kd_keranjang`=:kd_keranjang";
+    //             $result_delete_keranjang = coreNoReturn($sql_delete_keranjang, array(":kd_keranjang"=>$kd_keranjang));
+    //             if ($result_delete_keranjang['success'] == 1) {
+    //                 $response['Error'] = 0;
+    //                 $response['Message'] = "Berhasil Menghapus Barang Dari Keranjang!";
+    //                 return json_encode($response);
+    //             }else {
+    //                 $response['Error'] = 1;
+    //                 $response['Message'] = "Gagal Menghapus Barang Dari Keranjang!";
+    //                 return json_encode($response);
+    //             }
+    //         }
+    //     }else{
+    //         $response['Error'] = 1;
+    //         $response['Message'] = "Barang Tidak Ditemukan Dalam Keranjang!";
+    //         return json_encode($response);
+    //     }
+    // }
 
     public function hapusKeranjangOrder($kd_detail_barang, $kd_user){
         $sql_delete_keranjang = "DELETE FROM keranjang WHERE `kd_user`=:kd_user AND kd_detail_barang=:kd_detail_barang";
@@ -456,12 +488,8 @@ class Keranjang {
             $sql = "UPDATE `keranjang` db SET `jumlah_barang`=db.jumlah_barang+".intval($jumlah_barang)." WHERE `kd_detail_barang`=:kd_detail_barang AND kd_user=:kd_user";
             $result = coreNoReturn($sql, array(":kd_detail_barang"=>$kd_detail_barang, ":kd_user"=>$kd_user));
         }else{
-            $getLastId = json_decode(getLastIdTable('kd_keranjang', 'keranjang'), true);
-            $lastId = $getLastId['data'];
-            $kd_keranjang = 'KER'.$lastId;
-
-            $sql = "INSERT INTO keranjang(kd_keranjang, kd_user, kd_detail_barang, jumlah_barang) VALUES(:kd_keranjang, :kd_user, :kd_detail_barang, :jumlah_barang)";
-            $result = coreNoReturn($sql, array(":kd_keranjang" => $kd_keranjang, ":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang));    
+            $sql = "INSERT INTO keranjang(kd_user, kd_detail_barang, jumlah_barang) VALUES(:kd_user, :kd_detail_barang, :jumlah_barang)";
+            $result = coreNoReturn($sql, array(":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang));    
         }
         
         if ($result['success'] == 1) {
@@ -481,6 +509,41 @@ class Keranjang {
             return json_encode($response);
         }
     }
+
+    // public function tambahKeranjangSQL($kd_user, $kd_detail_barang, $jumlah_barang){
+
+    //     $sql = "SELECT * FROM keranjang WHERE kd_user=:kd_user AND kd_detail_barang=:kd_detail_barang";
+    //     $result = coreReturnArray($sql, array(":kd_user" => $kd_user, ":kd_detail_barang" => $kd_detail_barang));
+
+    //     if (sizeof($result) > 0) {
+    //         $sql = "UPDATE `keranjang` db SET `jumlah_barang`=db.jumlah_barang+".intval($jumlah_barang)." WHERE `kd_detail_barang`=:kd_detail_barang AND kd_user=:kd_user";
+    //         $result = coreNoReturn($sql, array(":kd_detail_barang"=>$kd_detail_barang, ":kd_user"=>$kd_user));
+    //     }else{
+    //         $getLastId = json_decode(getLastIdTable('kd_keranjang', 'keranjang'), true);
+    //         $lastId = $getLastId['data'];
+    //         $kd_keranjang = 'KER'.$lastId;
+
+    //         $sql = "INSERT INTO keranjang(kd_keranjang, kd_user, kd_detail_barang, jumlah_barang) VALUES(:kd_keranjang, :kd_user, :kd_detail_barang, :jumlah_barang)";
+    //         $result = coreNoReturn($sql, array(":kd_keranjang" => $kd_keranjang, ":kd_detail_barang" => $kd_detail_barang, ":kd_user" => $kd_user, ":jumlah_barang" => $jumlah_barang));    
+    //     }
+        
+    //     if ($result['success'] == 1) {
+
+    //         $sqlUpdateStok = "UPDATE `detail_barang` db SET `stok`=db.stok-".intval($jumlah_barang)." WHERE `kd_detail_barang`=:kd_detail_barang";
+    //         $resultUpdateStok = coreNoReturn($sqlUpdateStok, array(":kd_detail_barang"=>$kd_detail_barang));
+    //         if ($resultUpdateStok['success'] == 1) {
+    //             $response['MessageUpdateStok'] = "Berhasil Mengurangi Stok Barang!";
+    //         }
+            
+    //         $response['Error'] = 0;
+    //         $response['Message'] = "Berhasil Menambahkan Keranjang!";
+    //         return json_encode($response);
+    //     } else {
+    //         $response['Error'] = 1;
+    //         $response['Message'] = "Gagal Menambahkan Keranjang!";
+    //         return json_encode($response);
+    //     }
+    // }
 }
 
 class Kategori {

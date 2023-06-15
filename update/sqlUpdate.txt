@@ -30,3 +30,9 @@ ALTER TABLE `keranjang` DROP `harga_barang`;
 
 6/4/2023
 ALTER TABLE `detail_barang` ADD `berat_satuan` INT NULL DEFAULT NULL COMMENT 'gram' AFTER `harga`;
+
+6/15/2023
+DELETE FROM keranjang
+ALTER TABLE `keranjang` DROP PRIMARY KEY;
+ALTER TABLE `toko_ibu`.`keranjang` ADD PRIMARY KEY (`kd_user`, `kd_detail_barang`);
+ALTER TABLE `keranjang` DROP `kd_keranjang`;

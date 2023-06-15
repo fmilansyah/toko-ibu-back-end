@@ -238,17 +238,31 @@ function getDataKeranjang(){
 }
 
 function hapusKeranjang(){
-    if (isset($_POST['kd_keranjang'])) {
-        $kd_keranjang = htmlspecialchars($_POST['kd_keranjang']);
+    if (isset($_POST['kd_user'], $_POST['kd_user'])) {
+        $kd_user = htmlspecialchars($_POST['kd_user']);
+        $kd_detail_barang = htmlspecialchars($_POST['kd_detail_barang']);
 
         $keranjang = new Keranjang();
-        echo $keranjang->hapusKeranjangSQL($kd_keranjang);
+        echo $keranjang->hapusKeranjangSQL($kd_user, $kd_detail_barang);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
         echo json_encode($response);
     }
 }
+
+// function hapusKeranjang(){
+//     if (isset($_POST['kd_keranjang'])) {
+//         $kd_keranjang = htmlspecialchars($_POST['kd_keranjang']);
+
+//         $keranjang = new Keranjang();
+//         echo $keranjang->hapusKeranjangSQL($kd_keranjang);
+//     } else {
+//         $response["Error"] = 1;
+//         $response["Message"] = "1102|required field is missing";
+//         echo json_encode($response);
+//     }
+// }
 
 function login(){
     if (isset($_POST['no_telepon'], $_POST['password'])) {
