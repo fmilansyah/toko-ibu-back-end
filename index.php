@@ -46,6 +46,9 @@ Flight::route('POST /daftaruser', 'daftarUser');
 Flight::route('POST /ubahuser', 'ubahUser');
 Flight::route('POST /ubahstatususer', 'ubahStatusUser');
 Flight::route('POST /login', 'login');
+Flight::route('GET /list-user', 'listUser');
+Flight::route('GET /detail-user', 'detailUser');
+Flight::route('POST /change-user-password', 'changeUserPassword');
 
 // ----------------- KERANJANG
 Flight::route('POST /getdatakeranjang', 'getDataKeranjang');
