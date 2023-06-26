@@ -17,8 +17,9 @@ ini_set('memory_limit', '-1');
 require_once __DIR__ . '/sql_engine.php';
 
 function getDataBarang(){
+    $nama = isset($_GET['nama']) ? $_GET['nama'] : null;
     $barang = new Barang();
-    echo $barang->getDataBarangSQL();
+    echo $barang->getDataBarangSQL($nama);
 }
 
 function getBarangTerbaru(){

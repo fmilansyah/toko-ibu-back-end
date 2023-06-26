@@ -58,7 +58,7 @@ class Barang{
                 $response['file_barang'] = $result_file_barang;
             }
             if (sizeof($result_kategori_barang) > 0) {
-                $response['kategori_barang'] = $result_kategori_barang;
+                $response['kategori_barang'] = $result_kategori_barang[0];
             }
             $response['Message'] = 'Data Berhasil Ditemukan!';
             return json_encode($response);
@@ -70,11 +70,22 @@ class Barang{
         }
     }
 
-    public function getDataBarangSQL(){
-        $sql = "SELECT * FROM barang ORDER BY created_at DESC";
-        $result = coreReturnArray($sql, null);
+    public function getDataBarangSQL($nama){
+        $sql = "SELECT b.*, k.nama AS nama_kategori, (SELECT COUNT(*) FROM detail_barang db WHERE db.kd_barang = b.kd_barang) AS jumlah_varian FROM barang b INNER JOIN kategori k ON b.kd_kategori=k.kd_kategori WHERE b.record_status=:record_status ";
+        if ($nama) {
+            $sql .= " AND b.nama LIKE '%".$nama."%' ";
+        }
+        $sql .= "ORDER BY created_at DESC";
+        $result = coreReturnArray($sql, [':record_status' => STATUS_ACTIVE]);
     
         if (sizeof($result) > 0) {
+            foreach ($result as $key => $item) {
+                $getFiles = 'SELECT * FROM file_barang WHERE kd_barang=:kd_barang ORDER BY created_at ASC LIMIT 1';
+                $files = coreReturnArray($getFiles, array(":kd_barang" => $item['kd_barang']));
+                if (sizeof($files) > 0) {
+                    $result[$key]['file'] = $files[0]['file'];
+                }
+            }
             $response['Error'] = 0;
             $response['Barang'] = $result;
             $response['Message'] = 'Data Berhasil Ditemukan!';
