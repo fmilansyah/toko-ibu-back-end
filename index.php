@@ -35,7 +35,7 @@ Flight::route('GET /getkategori', 'getKategori');
 Flight::route('GET /getkategoridanbarang', 'getKategoriDanBarang');
 Flight::route('POST /tambahkategori', 'tambahKategori');
 Flight::route('POST /ubahkategori', 'ubahKategori');
-Flight::route('POST /deletekategori', 'deleteKategori');
+Flight::route('POST /deletekategori', 'hapusKategori');
 
 // ------------------ KATEGORI BARANG
 Flight::route('POST /getkategoribarang', 'getKategoriBarang');

@@ -373,12 +373,12 @@ function getKategoriBarang(){
     }
 }
 
-function deleteKategori(){
+function hapusKategori(){
     if (isset($_POST['kd_kategori'])) {
         $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
         
         $kategori = new Kategori();
-        echo $kategori->deleteKategoriSQL($kd_kategori);
+        echo $kategori->hapusKategoriSQL($kd_kategori);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
