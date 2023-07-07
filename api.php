@@ -17,8 +17,9 @@ ini_set('memory_limit', '-1');
 require_once __DIR__ . '/sql_engine.php';
 
 function getDataBarang(){
+    $nama = isset($_GET['nama']) ? $_GET['nama'] : null;
     $barang = new Barang();
-    echo $barang->getDataBarangSQL();
+    echo $barang->getDataBarangSQL($nama);
 }
 
 function getBarangTerbaru(){
@@ -199,14 +200,22 @@ function ubahStatusUser(){
     }
 }
 
+function listUser(){
+    $level = isset($_GET['level']) ? $_GET['level'] : null;
+    $nama = isset($_GET['nama']) ? $_GET['nama'] : null;
+    $user = new User();
+    echo $user->getListUser($level, $nama);
+}
+
 function daftarUser(){
     if (isset($_POST['nama'], $_POST['no_telepon'], $_POST['password'])) {
         $nama = htmlspecialchars($_POST['nama']);
         $no_telepon = htmlspecialchars($_POST['no_telepon']);
         $password = md5(htmlspecialchars($_POST['password']));
+        $level = isset($_POST['level']) ? htmlspecialchars($_POST['level']) : null;
 
         $user = new User();
-        echo $user->daftarUserSQL($nama, $no_telepon, $password);
+        echo $user->daftarUserSQL($nama, $no_telepon, $password, $level);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -277,6 +286,34 @@ function login(){
 
         $user = new User();
         echo $user->loginSQL($no_telepon, $password);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function detailUser(){
+    if (isset($_GET['kd_user'])) {
+        $kd_user = htmlspecialchars($_GET['kd_user']);
+
+        $user = new User();
+        echo $user->detailUser($kd_user);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function changeUserPassword(){
+    if (isset($_POST['kd_user'], $_POST['old_password'], $_POST['new_password'])) {
+        $kdUser = htmlspecialchars($_POST['kd_user']);
+        $oldPassword = md5(htmlspecialchars($_POST['old_password']));
+        $newPassword = md5(htmlspecialchars($_POST['new_password']));
+
+        $user = new User();
+        echo $user->changePassword($kdUser, $oldPassword, $newPassword);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";

@@ -58,7 +58,7 @@ class Barang{
                 $response['file_barang'] = $result_file_barang;
             }
             if (sizeof($result_kategori_barang) > 0) {
-                $response['kategori_barang'] = $result_kategori_barang;
+                $response['kategori_barang'] = $result_kategori_barang[0];
             }
             $response['Message'] = 'Data Berhasil Ditemukan!';
             return json_encode($response);
@@ -70,11 +70,22 @@ class Barang{
         }
     }
 
-    public function getDataBarangSQL(){
-        $sql = "SELECT * FROM barang ORDER BY created_at DESC";
-        $result = coreReturnArray($sql, null);
+    public function getDataBarangSQL($nama){
+        $sql = "SELECT b.*, k.nama AS nama_kategori, (SELECT COUNT(*) FROM detail_barang db WHERE db.kd_barang = b.kd_barang) AS jumlah_varian FROM barang b INNER JOIN kategori k ON b.kd_kategori=k.kd_kategori WHERE b.record_status=:record_status ";
+        if ($nama) {
+            $sql .= " AND b.nama LIKE '%".$nama."%' ";
+        }
+        $sql .= "ORDER BY created_at DESC";
+        $result = coreReturnArray($sql, [':record_status' => STATUS_ACTIVE]);
     
         if (sizeof($result) > 0) {
+            foreach ($result as $key => $item) {
+                $getFiles = 'SELECT * FROM file_barang WHERE kd_barang=:kd_barang ORDER BY created_at ASC LIMIT 1';
+                $files = coreReturnArray($getFiles, array(":kd_barang" => $item['kd_barang']));
+                if (sizeof($files) > 0) {
+                    $result[$key]['file'] = $files[0]['file'];
+                }
+            }
             $response['Error'] = 0;
             $response['Barang'] = $result;
             $response['Message'] = 'Data Berhasil Ditemukan!';
@@ -623,7 +634,7 @@ class Kategori {
     }
     
     public function getKategoriSQL($returnData = false){
-        $sql = "SELECT * FROM kategori ORDER BY createdAt DESC";
+        $sql = "SELECT * FROM kategori ORDER BY created_at DESC";
         $result = coreReturnArray($sql, null);
     
         if ($returnData) {
@@ -739,8 +750,15 @@ class Kategori {
 }
 
 class Order {
+    const STATUS_ORDER_WAITING_FOR_PAYMENT = 'Menunggu Pembayaran';
+    const STATUS_ORDER_WAITING_FOR_CONFIRMATION = 'Menunggu Konfirmasi';
+    const STATUS_ORDER_PROCESS = 'Diproses';
+    const STATUS_ORDER_DELIVERY = 'Dikirim';
+    const STATUS_ORDER_FINISHED = 'Selesai';
+    const STATUS_ORDER_CANCELLED = 'Batal';
+
     public function kirimBarangSQL($kd_order, $no_resi){
-        $status_order = 'PENGIRIMAN';
+        $status_order = self::STATUS_ORDER_DELIVERY;
         $sql = "UPDATE `orders` db SET `no_resi`=:no_resi, status_order=:status_order WHERE `kd_order`=:kd_order";
         $result = coreNoReturn($sql, array(":no_resi"=>$no_resi, ":status_order"=>$status_order, ":kd_order"=>$kd_order));
     
@@ -756,7 +774,7 @@ class Order {
     }
     
     public function selesaiOrderSQL($kd_order){
-        $status_order = 'SELESAI';
+        $status_order = self::STATUS_ORDER_PROCESS;
         $sql = "UPDATE `orders` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
         $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
     
@@ -782,10 +800,10 @@ class Order {
         }
         
         $status_pembayaran = 'LUNAS';
-        $status_order = 'PROSES';
+        $status_order = self::STATUS_ORDER_WAITING_FOR_CONFIRMATION;
         if ($midtrans_token) {
             $status_pembayaran = 'MENUNGGU PEMBAYARAN';
-            $status_order = 'MENUNGGU PEMBAYARAN';
+            $status_order = self::STATUS_ORDER_WAITING_FOR_PAYMENT;
         }
         $sqlOrder = "INSERT INTO orders(kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token)";
         $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $midtrans_token));
@@ -861,7 +879,7 @@ class Order {
     }
 
     public function getUserOrderSQL($kd_user){
-        $sqlOrder = 'SELECT kd_order, created_at, total_akhir, status_order FROM orders WHERE kd_user=:kd_user ORDER BY created_at DESC';
+        $sqlOrder = 'SELECT kd_order, created_at, total_akhir, status_order FROM `order` WHERE kd_user=:kd_user ORDER BY created_at DESC';
         $resultOrder = coreReturnArray($sqlOrder, array(":kd_user" => $kd_user));
 
         if (sizeof($resultOrder) > 0) {
@@ -904,6 +922,10 @@ class Order {
 }
 
 class User {
+    const LEVEL_BUYER = 'pembeli';
+    const LEVEL_CASHIER = 'kasir';
+    const LEVEL_OWNER = 'pemilik toko';
+
     public function loginSQL($no_telepon, $password){
         $sql = "SELECT * FROM user WHERE no_telepon=:no_telepon AND password=:password AND record_status='A'";
         $result = coreReturnArray($sql, array(":no_telepon" => $no_telepon, ":password" => $password));
@@ -919,11 +941,30 @@ class User {
             return json_encode($response);
         }
     }
+
+    public function detailUser($kd_user){
+        $sql = "SELECT * FROM user WHERE kd_user=:kd_user AND record_status=:record_status";
+        $result = coreReturnArray($sql, array(":kd_user" => $kd_user, ":record_status" => STATUS_ACTIVE));
     
-    public function daftarUserSQL($nama, $no_telepon, $password){
+        if (sizeof($result) > 0) {
+            $response['Error'] = 0;
+            $response['User'] = $result[0];
+            $response['Message'] = 'Data Ditemukan';
+            return json_encode($response);
+        }else{
+            $response['Error'] = 1;
+            $response['Message'] = 'Data Tidak Ditemukan';
+            return json_encode($response);
+        }
+    }
+    
+    public function daftarUserSQL($nama, $no_telepon, $password, $selectedLevel){
         // $random = substr(str_shuffle("0123456789"), 0, 6);
-        $level = 'pembeli';
-    
+        $level = self::LEVEL_BUYER;
+        if ($selectedLevel) {
+            $level = $selectedLevel;
+        }
+
         $sql = "INSERT INTO user(nama, no_telepon, password, level) VALUES(:nama, :no_telepon, :password, :level)";
         $result = coreNoReturn($sql, array(":nama" => $nama, ":no_telepon" => $no_telepon, ":password" => $password, ":level" => $level));
             
@@ -993,6 +1034,49 @@ class User {
         } else {
             $response['Error'] = 1;
             $response['Message'] = "Gagal Mengubah Status User!";
+            return json_encode($response);
+        }
+    }
+
+    public function getListUser($level, $nama){
+        $sql = 'SELECT * FROM user WHERE record_status=:record_status ';
+        if ($level) {
+            $sql .= "AND `level`='".$level."' ";
+        } else {
+            $sql .= "AND `level` IN ('".self::LEVEL_CASHIER."', '".self::LEVEL_OWNER."') ";
+        }
+        if ($nama) {
+            $sql .= "AND `nama` LIKE '%".$nama."%' ";
+        }
+        $sql .= 'ORDER BY created_at DESC';
+        $items = coreReturnArray($sql, array(":record_status"=>STATUS_ACTIVE));
+
+        $response['Error'] = 0;
+        $response['User'] = $items;
+        $response['Message'] = 'success';
+        return json_encode($response);
+    }
+
+    public function changePassword($kdUser, $oldPassword, $newPassword){
+        $sql = "SELECT * FROM user WHERE kd_user=:kd_user AND password=:password AND record_status='A'";
+        $result = coreReturnArray($sql, array(":kd_user" => $kdUser, ":password" => $oldPassword));
+    
+        if (sizeof($result) > 0) {
+            $sql = "UPDATE `user` SET `password`=:password WHERE `kd_user`=:kd_user";
+            $result = coreNoReturn($sql, array(":kd_user"=>$kdUser, ":password"=>$newPassword));
+
+            if ($result['success'] == 1) {
+                $response['Error'] = 0;
+                $response['Message'] = 'Kata Sandi Berhasil Diganti';
+                return json_encode($response);
+            }
+
+            $response['Error'] = 1;
+            $response['Message'] = 'Gagal Mengganti Kata Sandi';
+            return json_encode($response);
+        } else {
+            $response['Error'] = 1;
+            $response['Message'] = 'Kata Sandi Lama Tidak Sesuai';
             return json_encode($response);
         }
     }
