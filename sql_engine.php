@@ -328,10 +328,10 @@ class Barang{
             if($jumlah_ukuran > 0){
                 $hitung_input_ukuran = 0;
                 foreach ($ukuran as $key => $data) {
-                    $sql_i_Ukuran = "INSERT INTO `detail_barang`(`kd_detail_barang`, `kd_barang`, `varian`, `stok`, `harga`) 
-                            VALUES (:kd_detail_barang, :kd_barang, :varian, :stok, :harga)
+                    $sql_i_Ukuran = "INSERT INTO `detail_barang`(`kd_detail_barang`, `kd_barang`, `varian`, `stok`, `harga`, `berat_satuan`) 
+                            VALUES (:kd_detail_barang, :kd_barang, :varian, :stok, :harga, :berat_satuan)
                             ON DUPLICATE KEY 
-                            UPDATE `varian`= :varian2, `stok`= :stok2, `harga`= :harga2";
+                            UPDATE `varian`= :varian2, `stok`= :stok2, `harga`= :harga2, `berat_satuan`= :berat_satuan2 " ;
                     $result_i_ukuran = coreNoReturn($sql_i_Ukuran, array(
                                                         ":kd_detail_barang" => $data['kd_detail_barang'], 
                                                         ":kd_barang" => $kd_barang, 
@@ -340,7 +340,9 @@ class Barang{
                                                         ":stok" => $data['stok'],
                                                         ":stok2" => $data['stok'],
                                                         ":harga" => $data['harga'],
-                                                        ":harga2" => $data['harga']
+                                                        ":harga2" => $data['harga'],
+                                                        ":berat_satuan" => $data['berat_satuan'],
+                                                        ":berat_satuan2" => $data['berat_satuan']
                     ));
                     if ($result_i_ukuran['success'] == 1) {
                         $hitung_input_ukuran++;
@@ -366,7 +368,10 @@ class Barang{
                     $fileName = hilangSimbol($fileName);
     
                     $fileDir = $GLOBALS['API_URL'].'/assets/file/'.date("Y/m/d").'/';
-                    $kd_file = substr(str_shuffle("0123456789"), 0, 8);
+                    
+                    $getLastId = json_decode(getLastIdTable('kd_file', 'file_barang'), true);
+                    $lastId = $getLastId['data'];
+                    $kd_file = 'FB'.$lastId;
     
                     $result = coreNoReturn($sql, array(":kd_file" => $kd_file, ":kd_barang" => $kd_barang, ":file" => $fileDir .'/'. urldecode($fileName)));
     
@@ -735,7 +740,7 @@ class Kategori {
         }
     }
 
-    function deleteKategoriSQL($kd_kategori){
+    function hapusKategoriSQL($kd_kategori){
 
         $sql = "UPDATE `barang` SET kd_kategori=NULL WHERE `kd_kategori`=:kd_kategori";
         $result = coreNoReturn($sql, array(":kd_kategori"=>$kd_kategori));
