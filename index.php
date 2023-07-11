@@ -61,6 +61,10 @@ Flight::route('POST /kirimbarang', 'kirimBarang');
 Flight::route('POST /selesaiorder', 'selesaiOrder');
 Flight::route('POST /getlistorder', 'getListOrder');
 Flight::route('POST /getuserorder', 'getUserOrder');
+Flight::route('POST /getdetailorder', 'getDetailOrder');
+Flight::route('POST /updatestatusorder', 'updateStatusOrder');
+Flight::route('POST /updatepayment', 'updatePayment');
+Flight::route('GET /reportorder', 'reportOrder');
 
 // ---------------- MIDTRANS
 Flight::route('POST /midtrans-createtoken', 'midtransCreateToken');

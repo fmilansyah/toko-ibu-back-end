@@ -40,3 +40,5 @@ ALTER TABLE `keranjang` DROP `kd_keranjang`;
 6/21/2023
 ALTER TABLE `kategori` ADD `foto` TEXT NULL DEFAULT NULL AFTER `keterangan`;
 ALTER TABLE `user` MODIFY COLUMN `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL AFTER `nama`, MODIFY COLUMN `kode_pos` int(10) NULL AFTER `foto_profil`;
+ALTER TABLE `order` ADD COLUMN `midtrans_token` varchar(255) NULL AFTER `created_at`;
+ALTER TABLE `order` ADD COLUMN `ongkir` int(10) NULL AFTER `midtrans_token`;

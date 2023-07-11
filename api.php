@@ -49,7 +49,8 @@ function getKategoriDanBarang(){
 
 function getKategori(){
     $kategori = new Kategori();
-    echo $kategori->getKategoriSQL();
+    $nama = isset($_GET['nama']) ? $_GET['nama'] : null;
+    echo $kategori->getKategoriSQL(false, $nama);
 }
 
 function setKategoriBarang(){
@@ -115,6 +116,28 @@ function getUserOrder(){
     
 }
 
+function reportOrder(){
+    $startDate = isset($_GET['start_date']) && !empty($_GET['start_date']) ? htmlspecialchars($_GET['start_date']) : date('Y-m-d');
+    $endDate = isset($_GET['end_date']) && !empty($_GET['end_date']) ? htmlspecialchars($_GET['end_date']) : date('Y-m-d');
+
+    $order = new Order();
+    echo $order->getReportOrderSQL($startDate, $endDate);
+}
+
+function getDetailOrder(){
+    if (isset($_POST['kd_order'])) {
+        $kd_order = htmlspecialchars($_POST['kd_order']);
+
+        $order = new Order();
+        echo $order->getDetailOrderSQL($kd_order);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+    
+}
+
 function orderBarang(){
     if (isset($_POST['kd_user'], $_POST['orders'], $_POST['jenis_order'], $_POST['jasa_pengiriman'], $_POST['jenis_pengiriman'])) {
         $kd_user = htmlspecialchars($_POST['kd_user']);
@@ -155,6 +178,24 @@ function selesaiOrder(){
 
         $order = new Order();
         echo $order->selesaiOrderSQL($kd_order);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function updatePayment(){
+    var_dump($_POST);
+}
+
+function updateStatusOrder(){
+    if (isset($_POST['kd_order'], $_POST['status_order'])) {
+        $kd_order = htmlspecialchars($_POST['kd_order']);
+        $status_order = htmlspecialchars($_POST['status_order']);
+
+        $order = new Order();
+        echo $order->updateStatusOrderSQL($kd_order, $status_order);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -325,9 +366,13 @@ function tambahKategori(){
     if (isset($_POST['nama'], $_POST['keterangan'])) {
         $nama = htmlspecialchars($_POST['nama']);
         $keterangan = htmlspecialchars($_POST['keterangan']);
+        $foto = false;
+        if(isset($_FILES['foto'])){
+            $foto = $_FILES['foto'];
+        }
         
         $kategori = new Kategori();
-        echo $kategori->tambahKategoriSQL($nama, $keterangan);
+        echo $kategori->tambahKategoriSQL($nama, $keterangan, $foto);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -363,9 +408,13 @@ function ubahKategori(){
         $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
         $nama = htmlspecialchars($_POST['nama']);
         $keterangan = htmlspecialchars($_POST['keterangan']);
+        $foto = false;
+        if(isset($_FILES['foto'])){
+            $foto = $_FILES['foto'];
+        }
         
         $kategori = new Kategori();
-        echo $kategori->ubahKategoriSQL($kd_kategori, $nama, $keterangan);
+        echo $kategori->ubahKategoriSQL($kd_kategori, $nama, $keterangan, $foto);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";

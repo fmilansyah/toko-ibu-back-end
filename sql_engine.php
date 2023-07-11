@@ -594,13 +594,20 @@ class Keranjang {
 }
 
 class Kategori {
-    public function tambahKategoriSQL($nama, $keterangan){
+    public function tambahKategoriSQL($nama, $keterangan, $foto){
         $getLastId = json_decode(getLastIdTable('kd_kategori', 'kategori'), true);
         $lastId = $getLastId['data'];
         $kd_kategori = 'KAT'.$lastId;
-    
-        $sql = "INSERT INTO kategori(kd_kategori, nama, keterangan) VALUES(:kd_kategori, :nama, :keterangan)";
-        $result = coreNoReturn($sql, array(":kd_kategori" => $kd_kategori, ":nama" => $nama, ":keterangan" => $keterangan));
+
+        if($foto == false){
+            $sql = "INSERT INTO kategori(kd_kategori, nama, keterangan) VALUES(:kd_kategori, :nama, :keterangan)";
+            $result = coreNoReturn($sql, array(":kd_kategori" => $kd_kategori, ":nama" => $nama, ":keterangan" => $keterangan));
+        }else{
+            $fp = uploadFileSQL2($foto);
+            $sql = "INSERT INTO kategori(kd_kategori, nama, keterangan, foto) VALUES(:kd_kategori, :nama, :keterangan, :foto)";
+            $result = coreNoReturn($sql, array(":kd_kategori" => $kd_kategori, ":nama" => $nama, ":keterangan" => $keterangan, ":foto" => $fp));
+            // $response['fp'] = $fp;
+        }
 
         if ($result['success'] == 1) {
             $response['Error'] = 0;
@@ -613,9 +620,16 @@ class Kategori {
         }
     }
 
-    public function ubahKategoriSQL($kd_kategori, $nama, $keterangan){
-        $sql = "UPDATE `kategori` SET `nama`=:nama, `keterangan`=:keterangan  WHERE `kd_kategori`=:kd_kategori";
-        $result = coreNoReturn($sql, array(":kd_kategori"=>$kd_kategori, ":nama"=>$nama, ":keterangan"=>$keterangan));
+    public function ubahKategoriSQL($kd_kategori, $nama, $keterangan, $foto){
+        if($foto == false){
+            $sql = "UPDATE `kategori` SET `nama`=:nama, `keterangan`=:keterangan  WHERE `kd_kategori`=:kd_kategori";
+            $result = coreNoReturn($sql, array(":kd_kategori"=>$kd_kategori, ":nama"=>$nama, ":keterangan"=>$keterangan));
+        }else{
+            $fp = uploadFileSQL2($foto);
+            $sql = "UPDATE `kategori` SET `nama`=:nama, `keterangan`=:keterangan, `foto`=:foto  WHERE `kd_kategori`=:kd_kategori";
+            $result = coreNoReturn($sql, array(":kd_kategori"=>$kd_kategori, ":nama"=>$nama, ":keterangan"=>$keterangan,":foto"=>$fp));
+            // $response['fp'] = $fp;
+        }
     
         if ($result['success'] == 1) {
             $response['Error'] = 0;
@@ -628,9 +642,13 @@ class Kategori {
         }
     }
     
-    public function getKategoriSQL($returnData = false){
-        $sql = "SELECT * FROM kategori ORDER BY created_at DESC";
-        $result = coreReturnArray($sql, null);
+    public function getKategoriSQL($returnData = false, $nama = null){
+        $sql = "SELECT k.*, (SELECT COUNT(*) FROM barang b WHERE b.kd_kategori = k.kd_kategori AND b.record_status=:record_status) AS jumlah_produk FROM kategori k ";
+        if ($nama) {
+            $sql .= "WHERE k.nama LIKE '%".$nama."%' ";
+        }
+        $sql .= " ORDER BY k.created_at DESC";
+        $result = coreReturnArray($sql, [':record_status' => STATUS_ACTIVE]);
     
         if ($returnData) {
             return $result;
@@ -754,7 +772,7 @@ class Order {
 
     public function kirimBarangSQL($kd_order, $no_resi){
         $status_order = self::STATUS_ORDER_DELIVERY;
-        $sql = "UPDATE `orders` db SET `no_resi`=:no_resi, status_order=:status_order WHERE `kd_order`=:kd_order";
+        $sql = "UPDATE `order` db SET `no_resi`=:no_resi, status_order=:status_order WHERE `kd_order`=:kd_order";
         $result = coreNoReturn($sql, array(":no_resi"=>$no_resi, ":status_order"=>$status_order, ":kd_order"=>$kd_order));
     
         if ($result['success'] == 1) {
@@ -770,7 +788,22 @@ class Order {
     
     public function selesaiOrderSQL($kd_order){
         $status_order = self::STATUS_ORDER_PROCESS;
-        $sql = "UPDATE `orders` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
+        $sql = "UPDATE `order` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
+        $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
+    
+        if ($result['success'] == 1) {
+            $response['Error'] = 0;
+            $response['Message'] = "Berhasil Mengubah Status Order!";
+            return json_encode($response);
+        } else {
+            $response['Error'] = 1;
+            $response['Message'] = "Gagal Mengubah Status Order!";
+            return json_encode($response);
+        }
+    }
+
+    public function updateStatusOrderSQL($kd_order, $status_order){
+        $sql = "UPDATE `order` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
         $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
     
         if ($result['success'] == 1) {
@@ -785,7 +818,7 @@ class Order {
     }
     
     public function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token = null){
-        $getLastId = json_decode(getLastIdTable('kd_order', 'orders'), true);
+        $getLastId = json_decode(getLastIdTable('kd_order', 'order'), true);
         $lastId = $getLastId['data'];
         $kd_order = 'O'.$lastId;
     
@@ -800,13 +833,13 @@ class Order {
             $status_pembayaran = 'MENUNGGU PEMBAYARAN';
             $status_order = self::STATUS_ORDER_WAITING_FOR_PAYMENT;
         }
-        $sqlOrder = "INSERT INTO orders(kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token)";
+        $sqlOrder = "INSERT INTO `order` (kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token)";
         $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $midtrans_token));
-    
+
         if ($resultOrder['success'] == 1) {
     
             foreach ($orders as $key => $value) {
-                $sqlOrderDetail = "INSERT INTO order_detail(kd_order, kd_detail_barang, jumlah_barang, total_harga) VALUES(:kd_order, :kd_detail_barang, :jumlah_barang, :total_harga)";
+                $sqlOrderDetail = "INSERT INTO detail_order(kd_order, kd_detail_barang, jumlah_barang, total_harga) VALUES(:kd_order, :kd_detail_barang, :jumlah_barang, :total_harga)";
                 $resultOrderDetail = coreNoReturn($sqlOrderDetail, array(":kd_order" => $kd_order, ":kd_detail_barang" => $value['kd_detail_barang'], ":jumlah_barang" => $value['jumlah_barang'], ":total_harga" => $value['harga_total']));            
     
                 if($jenis_order == 'keranjang'){
@@ -831,11 +864,11 @@ class Order {
     public function getListOrderSQL($status_order){
         if ($status_order == 'ALL') {
             $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
-                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_pembayaran!='PENDING'";
-            $result = coreReturnArray($sql, null);
+                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order!=:status_order";
+            $result = coreReturnArray($sql, array(":status_order" => self::STATUS_ORDER_WAITING_FOR_PAYMENT));
         } else {
             $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
-                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_pembayaran!='PENDING' AND status_order=:status_order";
+                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order=:status_order";
             $result = coreReturnArray($sql, array(":status_order" => $status_order));
         }
 
@@ -843,10 +876,19 @@ class Order {
             
             $listOrder = [];
             foreach ($result as $key => $value) {
-                $sql2 = "SELECT dor.*,db.varian,b.nama FROM detail_order dor
-                        INNER JOIN detail_barang db ON dor.kd_detail_barang=db.kd_detail_barang AND dor.kd_order=:kd_order
-                        INNER JOIN barang b ON b.kd_barang=db.kd_barang";
+                $sql2 = "SELECT dor.*,db.varian,db.harga,b.nama,b.kd_barang FROM detail_order dor
+                        INNER JOIN detail_barang db ON dor.kd_detail_barang=db.kd_detail_barang
+                        INNER JOIN barang b ON b.kd_barang=db.kd_barang WHERE dor.kd_order=:kd_order";
                 $result2 = coreReturnArray($sql2, array(":kd_order" => $value['kd_order']));
+
+                foreach($result2 as $i => $v) {
+                    $file_barang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at ASC";
+                    $result_file_barang = coreReturnArray($file_barang, array(":kd_barang" => $v['kd_barang']));
+
+                    if (sizeof($result_file_barang) > 0) {
+                        $result2[$i]['file'] = $result_file_barang[0]['file'];
+                    }
+                }
 
                 $listOrder[] = [
                     'kd_order' => $value['kd_order'],
@@ -858,6 +900,7 @@ class Order {
                     'alamat' => $value['alamat'],
                     'no_telepon' => $value['no_telepon'],
                     'kode_pos' => $value['kode_pos'],
+                    'status_order' => $value['status_order'],
                     'detail_order' => $result2,
                 ];
             }
@@ -867,6 +910,40 @@ class Order {
             $response['Message'] = 'Data Berhasil Ditemukan!';
             return json_encode($response);
         }else{
+            $response['Error'] = 1;
+            $response['Message'] = 'Data Tidak Ditemukan!';
+            return json_encode($response);
+        }
+    }
+
+    public function getDetailOrderSQL($kd_order){
+        $sql = "SELECT o.*, u.nama AS nama_user, u.alamat, u.no_telepon, u.kode_pos FROM `order` o INNER JOIN user u ON o.kd_user=u.kd_user WHERE o.kd_order=:kd_order";
+        $result = coreReturnArray($sql, array(":kd_order" => $kd_order));
+
+        if (sizeof($result) > 0) {
+            $result = $result[0];
+            $sqlDetailOrder = "SELECT dor.*, db.varian, db.harga, db.berat_satuan, b.nama AS nama_barang, b.kd_barang FROM detail_order dor
+                            INNER JOIN detail_barang db ON dor.kd_detail_barang=db.kd_detail_barang
+                            INNER JOIN barang b ON b.kd_barang=db.kd_barang WHERE dor.kd_order=:kd_order";
+            $resultDetailOrder = coreReturnArray($sqlDetailOrder, array(":kd_order" => $kd_order));
+
+            if (sizeof($resultDetailOrder) > 0) {
+                foreach($resultDetailOrder as $key => $val) {
+                    $fileBarang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at ASC";
+                    $resultFileBarang = coreReturnArray($fileBarang, array(":kd_barang" => $val['kd_barang']));
+
+                    if (sizeof($resultFileBarang) > 0) {
+                        $resultDetailOrder[$key]['file'] = $resultFileBarang[0]['file'];
+                    }
+                }
+                $result['detail_order'] = $resultDetailOrder;
+            }
+
+            $response['Order'] = $result;
+            $response['Error'] = 0;
+            $response['Message'] = 'Data Berhasil Ditemukan!';
+            return json_encode($response);
+        } else {
             $response['Error'] = 1;
             $response['Message'] = 'Data Tidak Ditemukan!';
             return json_encode($response);
@@ -885,8 +962,9 @@ class Order {
                                           od.total_harga,
                                           db.kd_barang,
                                           db.varian,
+                                          db.harga,
                                           b.nama
-                                    FROM order_detail od
+                                    FROM detail_order od
                                     INNER JOIN detail_barang db ON od.kd_detail_barang = db.kd_detail_barang
                                     INNER JOIN barang b ON db.kd_barang = b.kd_barang
                                     WHERE od.kd_order=:kd_order";
@@ -914,12 +992,41 @@ class Order {
             return json_encode($response);
         }
     }
+
+    public function getReportOrderSQL($startDate, $endDate){
+        $sqlOrder = 'SELECT dor.kd_detail_barang, SUM(dor.jumlah_barang) AS total_qty, SUM(dor.total_harga) AS total_harga, db.varian, db.harga, b.kd_barang, b.nama
+                     FROM `detail_order` dor
+                     INNER JOIN detail_barang db ON db.kd_detail_barang = dor.kd_detail_barang
+                     INNER JOIN barang b ON b.kd_barang = db.kd_barang
+                     WHERE dor.created_at BETWEEN "'.$startDate.' 00:00:00" AND "'.$endDate.' 23:59:59"
+                     GROUP BY dor.kd_detail_barang';
+        $resultOrder = coreReturnArray($sqlOrder, null);
+
+        if (sizeof($resultOrder) > 0) {
+            foreach ($resultOrder as $key => $item) {
+                $getFiles = 'SELECT * FROM file_barang WHERE kd_barang=:kd_barang ORDER BY created_at ASC LIMIT 1';
+                $files = coreReturnArray($getFiles, array(":kd_barang" => $item['kd_barang']));
+                if (sizeof($files) > 0) {
+                    $resultOrder[$key]['file'] = $files[0]['file'];
+                }
+            }
+            $response['Error'] = 0;
+            $response['Order'] = $resultOrder;
+            $response['Message'] = 'Data Berhasil Ditemukan';
+            return json_encode($response);
+        } else {
+            $response['Error'] = 0;
+            $response['Order'] = [];
+            $response['Message'] = 'Data Kosong';
+            return json_encode($response);
+        }
+    }
 }
 
 class User {
-    const LEVEL_BUYER = 'pembeli';
-    const LEVEL_CASHIER = 'kasir';
-    const LEVEL_OWNER = 'pemilik toko';
+    const LEVEL_BUYER = 'Pembeli';
+    const LEVEL_CASHIER = 'Kasir';
+    const LEVEL_OWNER = 'Pemilik Toko';
 
     public function loginSQL($no_telepon, $password){
         $sql = "SELECT * FROM user WHERE no_telepon=:no_telepon AND password=:password AND record_status='A'";
@@ -1102,7 +1209,7 @@ function hilangSimbol($name){
 }
 
 function getLastIdTable($idField, $table){
-    $sql = "SELECT ".$idField." FROM ".$table." ORDER BY created_at DESC LIMIT 1";
+    $sql = "SELECT ".$idField." FROM `".$table."` ORDER BY created_at DESC LIMIT 1";
     $result = coreReturnArray($sql, null);
 
     if (sizeof($result) > 0) {
