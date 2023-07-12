@@ -1072,6 +1072,14 @@ class User {
             $level = $selectedLevel;
         }
 
+        $CariUser = "SELECT * FROM `user` WHERE no_telepon=:no_telepon";
+        $resultCariUser = coreReturnArray($CariUser, array(":no_telepon" => $no_telepon));
+        if (sizeof($resultCariUser) > 0) {
+            $response['Error'] = 1;
+            $response['Message'] = "Gagal, Nomor Telepon Telah Terdaftar!";
+            return json_encode($response);
+        }
+
         $sql = "INSERT INTO user(nama, no_telepon, password, level) VALUES(:nama, :no_telepon, :password, :level)";
         $result = coreNoReturn($sql, array(":nama" => $nama, ":no_telepon" => $no_telepon, ":password" => $password, ":level" => $level));
             
