@@ -1,7 +1,8 @@
 {
     "require": {
         "odenktools/php-bca": "^2.3",
-        "guzzlehttp/guzzle": "^7.7"
+        "guzzlehttp/guzzle": "^7.7",
+        "mpdf/mpdf": "7.0"
     },
     "config": {
         "allow-plugins": {

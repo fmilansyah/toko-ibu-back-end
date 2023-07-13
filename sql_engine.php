@@ -998,7 +998,7 @@ class Order {
         }
     }
 
-    public function getReportOrderSQL($startDate, $endDate){
+    public function getReportOrderSQL($startDate, $endDate, $returnData = false){
         $sqlOrder = 'SELECT dor.kd_detail_barang, SUM(dor.jumlah_barang) AS total_qty, SUM(dor.total_harga) AS total_harga, db.varian, db.harga, b.kd_barang, b.nama
                      FROM `detail_order` dor
                      INNER JOIN detail_barang db ON db.kd_detail_barang = dor.kd_detail_barang
@@ -1015,15 +1015,23 @@ class Order {
                     $resultOrder[$key]['file'] = $files[0]['file'];
                 }
             }
-            $response['Error'] = 0;
-            $response['Order'] = $resultOrder;
-            $response['Message'] = 'Data Berhasil Ditemukan';
-            return json_encode($response);
+            if ($returnData) {
+                return $resultOrder;
+            } else {
+                $response['Error'] = 0;
+                $response['Order'] = $resultOrder;
+                $response['Message'] = 'Data Berhasil Ditemukan';
+                return json_encode($response);
+            }
         } else {
-            $response['Error'] = 0;
-            $response['Order'] = [];
-            $response['Message'] = 'Data Kosong';
-            return json_encode($response);
+            if ($returnData) {
+                return [];
+            } else {
+                $response['Error'] = 0;
+                $response['Order'] = [];
+                $response['Message'] = 'Data Kosong';
+                return json_encode($response);
+            }
         }
     }
 }
