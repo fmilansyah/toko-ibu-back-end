@@ -42,3 +42,5 @@ ALTER TABLE `kategori` ADD `foto` TEXT NULL DEFAULT NULL AFTER `keterangan`;
 ALTER TABLE `user` MODIFY COLUMN `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL AFTER `nama`, MODIFY COLUMN `kode_pos` int(10) NULL AFTER `foto_profil`;
 ALTER TABLE `order` ADD COLUMN `midtrans_token` varchar(255) NULL AFTER `created_at`;
 ALTER TABLE `order` ADD COLUMN `ongkir` int(10) NULL AFTER `midtrans_token`;
+ALTER TABLE `user` ADD COLUMN `biteship_area_id` varchar(200) NULL DEFAULT NULL AFTER `created_at`;
+ALTER TABLE `order` ADD COLUMN `kode_jasa_pengiriman` varchar(10) CHARACTER SET utf16le NULL AFTER `ongkir`;

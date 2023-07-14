@@ -49,6 +49,7 @@ Flight::route('POST /login', 'login');
 Flight::route('GET /list-user', 'listUser');
 Flight::route('GET /detail-user', 'detailUser');
 Flight::route('POST /change-user-password', 'changeUserPassword');
+Flight::route('POST /requestresetpassword', 'requestResetPassword');
 
 // ----------------- KERANJANG
 Flight::route('POST /getdatakeranjang', 'getDataKeranjang');
@@ -63,11 +64,17 @@ Flight::route('POST /getlistorder', 'getListOrder');
 Flight::route('POST /getuserorder', 'getUserOrder');
 Flight::route('POST /getdetailorder', 'getDetailOrder');
 Flight::route('POST /updatestatusorder', 'updateStatusOrder');
-Flight::route('POST /updatepayment', 'updatePayment');
 Flight::route('GET /reportorder', 'reportOrder');
 
 // ---------------- MIDTRANS
 Flight::route('POST /midtrans-createtoken', 'midtransCreateToken');
+Flight::route('POST /midtrans-payment-success', 'midtransPaymentSuccess');
+
+// ---------------- BITESHIP
+Flight::route('GET /biteshipmaps', 'biteshipMaps');
+Flight::route('GET /biteshipcouriers', 'biteshipCouriers');
+Flight::route('POST /biteshiprates', 'biteshipRates');
+Flight::route('GET /biteshiptracking', 'biteshipTracking');
 
 Flight::start();
 ?>

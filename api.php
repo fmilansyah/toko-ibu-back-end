@@ -143,14 +143,16 @@ function orderBarang(){
         $kd_user = htmlspecialchars($_POST['kd_user']);
         $jenis_order = htmlspecialchars($_POST['jenis_order']);
         $orders = json_decode($_POST['orders'], true);
+        $ongkir = htmlspecialchars($_POST['ongkir']);
 
         $jasa_pengiriman = htmlspecialchars($_POST['jasa_pengiriman']);
+        $kode_jasa_pengiriman = htmlspecialchars($_POST['kode_jasa_pengiriman']);
         $jenis_pengiriman = htmlspecialchars($_POST['jenis_pengiriman']);
 
         $midtrans_token = isset($_POST['midtrans_token']) ? htmlspecialchars($_POST['midtrans_token']) : null;
 
         $order = new Order();
-        echo $order->orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token);
+        echo $order->orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token, $ongkir, $kode_jasa_pengiriman);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -185,10 +187,6 @@ function selesaiOrder(){
     }
 }
 
-function updatePayment(){
-    var_dump($_POST);
-}
-
 function updateStatusOrder(){
     if (isset($_POST['kd_order'], $_POST['status_order'])) {
         $kd_order = htmlspecialchars($_POST['kd_order']);
@@ -212,6 +210,7 @@ function ubahUser(){
         $email = htmlspecialchars($_POST['email']);
         $alamat = htmlspecialchars($_POST['alamat']);
         $kode_pos = htmlspecialchars($_POST['kode_pos']);
+        $biteship_area_id = htmlspecialchars($_POST['biteship_area_id']);
 
         $foto_profil = false;
         if(isset($_FILES['foto_profil'])){
@@ -219,7 +218,7 @@ function ubahUser(){
         }
 
         $user = new User();
-        echo $user->ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil);
+        echo $user->ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil, $biteship_area_id);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -486,4 +485,66 @@ function midtransCreateToken(){
     }
 }
 
+function biteshipMaps() {
+    $input = isset($_GET['input']) ? htmlspecialchars($_GET['input']) : '';
+
+    $biteship = new Biteship();
+    echo $biteship->getMaps($input);
+}
+
+function biteshipCouriers() {
+    $biteship = new Biteship();
+    echo $biteship->getCouriers();
+}
+
+function biteshipRates() {
+    if (isset($_POST['destination_area_id'], $_POST['couriers'], $_POST['items'])) {
+        $destinationAreaId = isset($_POST['destination_area_id']) ? htmlspecialchars($_POST['destination_area_id']) : '';
+        $couriers = isset($_POST['couriers']) ? htmlspecialchars($_POST['couriers']) : '';
+        $items = isset($_POST['items']) ? json_decode($_POST['items']) : [];
+
+        $biteship = new Biteship();
+        echo $biteship->getRates($destinationAreaId, $couriers, $items);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function biteshipTracking() {
+    if (isset($_GET['waybill_id'], $_GET['courier'])) {
+        $waybillId = htmlspecialchars($_GET['waybill_id']);
+        $courier = htmlspecialchars($_GET['courier']);
+    
+        $biteship = new Biteship();
+        echo $biteship->getTracking($waybillId, $courier);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function midtransPaymentSuccess() {
+    if (isset(Flight::request()->data->transaction_status) && Flight::request()->data->transaction_status === 'settlement') {
+        $orderId = htmlspecialchars(Flight::request()->data->order_id);
+
+        $order = new Order();
+        echo $order->updateStatusOrderSQL($orderId, Order::STATUS_ORDER_WAITING_FOR_CONFIRMATION);
+    }
+}
+
+function requestResetPassword() {
+    if (isset($_POST['email'])) {
+        $email = htmlspecialchars($_POST['email']);
+
+        $user = new User();
+        echo $user->requestResetPassword($email);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
 ?>

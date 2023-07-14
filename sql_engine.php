@@ -17,6 +17,7 @@ if ($method == "OPTIONS") {
 date_default_timezone_set('Asia/Jakarta');
 require_once __DIR__ . '/core/core.php';
 require_once __DIR__ . '/core/MidtransApi.php';
+require_once __DIR__ . '/core/BiteshipApi.php';
 
 const STATUS_ACTIVE = 'A';
 
@@ -426,7 +427,7 @@ class Barang{
 
 class Keranjang {
     public function getDataKeranjangSQL($kd_user){
-        $sql = "SELECT k.*, b.kd_barang, b.nama, db.varian, (db.harga * k.jumlah_barang) as harga_total FROM keranjang k INNER JOIN detail_barang db ON k.kd_detail_barang=db.kd_detail_barang AND k.kd_user=:kd_user INNER JOIN barang b ON db.kd_barang=b.kd_barang ORDER BY k.created_at DESC";
+        $sql = "SELECT k.*, b.kd_barang, b.nama, db.varian, db.berat_satuan, (db.harga * k.jumlah_barang) as harga_total FROM keranjang k INNER JOIN detail_barang db ON k.kd_detail_barang=db.kd_detail_barang AND k.kd_user=:kd_user INNER JOIN barang b ON db.kd_barang=b.kd_barang ORDER BY k.created_at DESC";
         $result = coreReturnArray($sql, array(":kd_user" => $kd_user));
 
         foreach ($result as $key => $val) {
@@ -808,8 +809,13 @@ class Order {
     }
 
     public function updateStatusOrderSQL($kd_order, $status_order){
-        $sql = "UPDATE `order` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
-        $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
+        if ($status_order === self::STATUS_ORDER_WAITING_FOR_CONFIRMATION) {
+            $sql = "UPDATE `order` db SET status_order=:status_order, status_pembayaran=:status_pembayaran WHERE `kd_order`=:kd_order";
+            $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order, ":status_pembayaran" => 'LUNAS'));
+        } else {
+            $sql = "UPDATE `order` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
+            $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
+        }
     
         if ($result['success'] == 1) {
             $response['Error'] = 0;
@@ -821,8 +827,8 @@ class Order {
             return json_encode($response);
         }
     }
-    
-    public function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token = null){
+
+    public function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token = null, $ongkir, $kode_jasa_pengiriman){
         $getLastId = json_decode(getLastIdTable('kd_order', 'order'), true);
         $lastId = $getLastId['data'];
         $kd_order = 'O'.$lastId;
@@ -831,15 +837,20 @@ class Order {
         foreach ($orders as $key => $value) {
             $total_akhir += $value['harga_total'];
         }
-        
-        $status_pembayaran = 'LUNAS';
-        $status_order = self::STATUS_ORDER_WAITING_FOR_CONFIRMATION;
-        if ($midtrans_token) {
-            $status_pembayaran = 'MENUNGGU PEMBAYARAN';
-            $status_order = self::STATUS_ORDER_WAITING_FOR_PAYMENT;
-        }
-        $sqlOrder = "INSERT INTO `order` (kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token)";
-        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $midtrans_token));
+
+        $snapData = [
+            'transaction_details' => [
+                'order_id' => $kd_order,
+                'gross_amount' => $total_akhir + $ongkir,
+            ],
+        ];
+        $midtrans = new MidtransApi();
+        $pay = $midtrans->request(MidtransApi::TYPE_SNAP, 'POST', '/snap/v1/transactions', $snapData);
+
+        $status_pembayaran = 'MENUNGGU PEMBAYARAN';
+        $status_order = self::STATUS_ORDER_WAITING_FOR_PAYMENT;
+        $sqlOrder = "INSERT INTO `order` (kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token, ongkir, kode_jasa_pengiriman) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token, :ongkir, :kode_jasa_pengiriman)";
+        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $pay['body']['token'], ":ongkir" => $ongkir, ":kode_jasa_pengiriman" => $kode_jasa_pengiriman));
 
         if ($resultOrder['success'] == 1) {
     
@@ -854,8 +865,8 @@ class Order {
             }
     
             $response['Error'] = 0;
-            // $response['total_akhir'] = $total_akhir;
-            // $response['orders'] = $orders;
+            $response['kd_order'] = $kd_order;
+            $response['token'] = $pay['body']['token'];
             $jenis_order == 'keranjang' ? $response['cobaHapusKeranjang'] = $cobaHapusKeranjang : '';
             $response['Message'] = "Berhasil Order Barang!";
             return json_encode($response);
@@ -1057,6 +1068,22 @@ class User {
         }
     }
 
+    public function requestResetPassword($email){
+        $sql = "SELECT * FROM user WHERE email=:email AND record_status='A'";
+        $result = coreReturnArray($sql, array(":email" => $email));
+    
+        if (sizeof($result) > 0) {
+            $response['Error'] = 0;
+            $response['User'] = $result[0];
+            $response['Message'] = 'Silakan periksa kotak masuk email anda';
+            return json_encode($response);
+        } else {
+            $response['Error'] = 1;
+            $response['Message'] = 'Email Tidak Ditemukan';
+            return json_encode($response);
+        }
+    }
+
     public function detailUser($kd_user){
         $sql = "SELECT * FROM user WHERE kd_user=:kd_user AND record_status=:record_status";
         $result = coreReturnArray($sql, array(":kd_user" => $kd_user, ":record_status" => STATUS_ACTIVE));
@@ -1103,16 +1130,17 @@ class User {
         }
     }
     
-    public function ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil){
+    public function ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil, $biteship_area_id){
         if($foto_profil == false){
             $sql = "UPDATE `user` SET `nama`=:nama, 
                                         `email`=:email,
                                         `no_telepon`=:no_telepon,
                                         `alamat`=:alamat,
-                                        `kode_pos`=:kode_pos
+                                        `kode_pos`=:kode_pos,
+                                        `biteship_area_id`=:biteship_area_id
                                     WHERE `kd_user`=:kd_user";
             $result = coreNoReturn($sql, array(":kd_user"=>$kd_user, ":nama"=>$nama, ":email"=>$email, 
-            ":no_telepon"=>$no_telepon, ":alamat"=>$alamat, ":kode_pos"=>$kode_pos));
+            ":no_telepon"=>$no_telepon, ":alamat"=>$alamat, ":kode_pos"=>$kode_pos, ":biteship_area_id" => $biteship_area_id));
         }else{
             $fp = uploadFileSQL2($foto_profil);
             $sql = "UPDATE `user` SET `nama`=:nama, 
@@ -1120,14 +1148,14 @@ class User {
                                         `no_telepon`=:no_telepon,
                                         `alamat`=:alamat,
                                         `foto_profil`=:foto_profil,  
-                                        `kode_pos`=:kode_pos
+                                        `kode_pos`=:kode_pos,
+                                        `biteship_area_id`=:biteship_area_id
                                     WHERE `kd_user`=:kd_user";
             $result = coreNoReturn($sql, array(":kd_user"=>$kd_user, ":nama"=>$nama, ":email"=>$email, 
-            ":no_telepon"=>$no_telepon, ":alamat"=>$alamat, ":foto_profil"=>$fp, ":kode_pos"=>$kode_pos));
+            ":no_telepon"=>$no_telepon, ":alamat"=>$alamat, ":foto_profil"=>$fp, ":kode_pos"=>$kode_pos, ":biteship_area_id" => $biteship_area_id));
             // $response['fp'] = $fp;
         }
         
-    
         if ($result['success'] == 1) {
 
             $SQLuser = "SELECT * FROM `user` WHERE kd_user=:kd_user";
@@ -1221,6 +1249,51 @@ class Midtrans {
         $response['data'] = [
             'token' => $pay['body']['token'],
         ];
+        return json_encode($response);
+    }
+}
+
+class Biteship {
+    public function getMaps($input = '')
+    {
+        $biteship = new BiteshipApi();
+        $req = $biteship->request('GET', "/v1/maps/areas?countries=ID&input=$input&type=single");
+        $response['status'] = 200;
+        $response['message'] = "success";
+        $response['data'] = $req['body']['areas'];
+        return json_encode($response);
+    }
+    public function getCouriers()
+    {
+        $biteship = new BiteshipApi();
+        $req = $biteship->request('GET', "/v1/couriers");
+        $response['status'] = 200;
+        $response['message'] = "success";
+        $response['data'] = $req['body']['couriers'];
+        return json_encode($response);
+    }
+    public function getRates($destinationAreaId, $couriers, $items)
+    {
+        $data = [
+            'origin_area_id' => BiteshipApi::ORIGIN_AREA_ID,
+            'destination_area_id' => $destinationAreaId,
+            'couriers' => $couriers,
+            'items' => $items,
+        ];
+        $biteship = new BiteshipApi();
+        $req = $biteship->request('POST', '/v1/rates/couriers', $data);
+        $response['status'] = 200;
+        $response['message'] = "success";
+        $response['data'] = $req['body']['pricing'];
+        return json_encode($response);
+    }
+    public function getTracking($waybillId = '', $courier = '')
+    {
+        $biteship = new BiteshipApi();
+        $req = $biteship->request('GET', "/v1/trackings/$waybillId/couriers/$courier");
+        $response['status'] = 200;
+        $response['message'] = "success";
+        $response['data'] = $req['body']['history'];
         return json_encode($response);
     }
 }
