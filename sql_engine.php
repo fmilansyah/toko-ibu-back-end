@@ -37,7 +37,7 @@ class Barang{
         $barang = "SELECT * FROM `barang` WHERE kd_barang=:kd_barang";
         $result_barang = coreReturnArray($barang, array(":kd_barang" => $kd_barang));
     
-        $detail_barang = "SELECT * FROM `detail_barang` WHERE kd_barang=:kd_barang ORDER BY created_at DESC";
+        $detail_barang = "SELECT * FROM `detail_barang` WHERE kd_barang=:kd_barang ORDER BY created_at ASC";
         $result_detail_barang = coreReturnArray($detail_barang, array(":kd_barang" => $kd_barang));
     
         $file_barang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at ASC";
@@ -324,6 +324,13 @@ class Barang{
                 $sql_delete_file = "DELETE FROM file_barang WHERE `kd_file`=:kd_file";
                 $result_delete_file = coreNoReturn($sql_delete_file, array(":kd_file"=>$value));
             }
+
+            function getLastIdDB(){
+                $getLastId = json_decode(getLastIdTable('kd_detail_barang', 'detail_barang'), true);
+                $lastId = $getLastId['data'];
+                $kd_DB = 'DB'.$lastId;
+                return $kd_DB;
+            }
     
             $jumlah_ukuran = sizeof($ukuran);
             if($jumlah_ukuran > 0){
@@ -334,7 +341,7 @@ class Barang{
                             ON DUPLICATE KEY 
                             UPDATE `varian`= :varian2, `stok`= :stok2, `harga`= :harga2, `berat_satuan`= :berat_satuan2 " ;
                     $result_i_ukuran = coreNoReturn($sql_i_Ukuran, array(
-                                                        ":kd_detail_barang" => $data['kd_detail_barang'], 
+                                                        ":kd_detail_barang" => isset($data['kd_detail_barang']) ? $data['kd_detail_barang'] : getLastIdDB(), 
                                                         ":kd_barang" => $kd_barang, 
                                                         ":varian" => $data['varian'],
                                                         ":varian2" => $data['varian'],
@@ -350,9 +357,9 @@ class Barang{
                     }
                 }
                 if($jumlah_ukuran == $hitung_input_ukuran){
-                    $response['Message_Ukuran'] = "Berhasil Mengubah Ukuran Barang!";
+                    $response['Message_Ukuran'] = "Berhasil Menyimpan Varian Barang!";
                 }else{
-                    $response['Message_Ukuran'] = "Gagal Mengubah Ukuran Barang!";
+                    $response['Message_Ukuran'] = "Gagal Menyimpan Varian Barang!";
                 }
             }
     
