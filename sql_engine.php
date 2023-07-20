@@ -354,6 +354,7 @@ class Barang{
                     ));
                     if ($result_i_ukuran['success'] == 1) {
                         $hitung_input_ukuran++;
+                        sleep(1);
                     }
                 }
                 if($jumlah_ukuran == $hitung_input_ukuran){
@@ -396,6 +397,7 @@ class Barang{
                         }
                         
                         $hitung_upload++;
+                        sleep(1);
                     }
                 }
                 if($jumlah_i_file == $hitung_upload){
