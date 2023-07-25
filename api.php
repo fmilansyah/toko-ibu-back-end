@@ -72,6 +72,7 @@ function tambahDataBarang(){
     if (isset($_POST['nama'], $_POST['kd_kategori'], $_POST['ukuran'])) {
         $nama = htmlspecialchars($_POST['nama']);
         $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
+        $deskripsi = htmlspecialchars($_POST['deskripsi']);
         $ukuran = json_decode($_POST['ukuran'], true);
         
         $listFile = false;
@@ -80,7 +81,7 @@ function tambahDataBarang(){
         }
 
         $barang = new Barang();
-        echo $barang->tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile);
+        echo $barang->tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile, $deskripsi);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -383,6 +384,7 @@ function ubahDataBarang(){
     if (isset($_POST['kd_barang'], $_POST['nama'], $_POST['kd_kategori'], $_POST['ukuran'], $_POST['hapus_ukuran'], $_POST['hapus_file'])) {
         $kd_barang = htmlspecialchars($_POST['kd_barang']);
         $nama = htmlspecialchars($_POST['nama']);
+        $deskripsi = htmlspecialchars($_POST['deskripsi']);
         $kd_kategori = htmlspecialchars($_POST['kd_kategori']);
         $ukuran = json_decode($_POST['ukuran'], true);
         $hapus_ukuran = json_decode($_POST['hapus_ukuran'], true);
@@ -394,7 +396,7 @@ function ubahDataBarang(){
         }
 
         $barang = new Barang();
-        echo $barang->ubahDataBarangSQL($kd_barang, $nama, $kd_kategori, $ukuran, $hapus_ukuran, $hapus_file, $listFile);
+        echo $barang->ubahDataBarangSQL($kd_barang, $nama, $kd_kategori, $ukuran, $hapus_ukuran, $hapus_file, $listFile, $deskripsi);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
@@ -531,6 +533,8 @@ function midtransPaymentSuccess() {
         $orderId = htmlspecialchars(Flight::request()->data->order_id);
 
         $order = new Order();
+        
+        $orderId = substr($orderId, 0, -8);
         echo $order->updateStatusOrderSQL($orderId, Order::STATUS_ORDER_WAITING_FOR_CONFIRMATION);
     }
 }
@@ -541,6 +545,20 @@ function requestResetPassword() {
 
         $user = new User();
         echo $user->requestResetPassword($email);
+    } else {
+        $response["Error"] = 1;
+        $response["Message"] = "1102|required field is missing";
+        echo json_encode($response);
+    }
+}
+
+function resetPassword() {
+    if (isset($_POST['token'], $_POST['password'])) {
+        $token = $_POST['token'];
+        $password = htmlspecialchars($_POST['password']);
+
+        $user = new User();
+        echo $user->resetPassword($token, $password);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";

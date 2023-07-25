@@ -8,7 +8,7 @@ class MidtransApi
     const TYPE_SNAP = 'snap';
 
     private static $baseUrl;
-    private static $serverKey = ''; // Do not commit server key
+    private static $serverKey = 'Mid-server-f279rQqn2eSUDIyuK1OB_H3t'; // Do not commit server key
     private static $client;
     private static $type;
 
@@ -30,11 +30,11 @@ class MidtransApi
     private static function getBaseUrl()
     {
         if (self::$type === self::TYPE_API) {
-            self::$baseUrl = 'https://api.sandbox.midtrans.com';
+            self::$baseUrl = 'https://api.midtrans.com';
         }
 
         if (self::$type === self::TYPE_SNAP) {
-            self::$baseUrl = 'https://app.sandbox.midtrans.com';
+            self::$baseUrl = 'https://app.midtrans.com';
         }
     }
 

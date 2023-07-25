@@ -17,7 +17,7 @@ foreach ($data as $i => $o) {
     $tableBody .= '
     <tr>
         <td>'.($i + 1).'</td>
-        <td>'.$o['nama'].'</td>
+        <td>'.$o['nama'].' - '.$o['varian'].'</td>
         <td style="text-align: right;">Rp. '.number_format($o['harga']).'</td>
         <td style="text-align: right;">'.$o['total_qty'].' pcs</td>
         <td style="text-align: right;">Rp. '.number_format($o['total_harga']).'</td>
@@ -61,4 +61,4 @@ th {
 </table>
 ');
 
-$mpdf->Output('Laporan Penjualan '.$startDate.' - '.$endDate.'.pdf', 'D');
+$mpdf->Output('Laporan Penjualan '.$startDate.' - '.$endDate.'.pdf', 'I');
