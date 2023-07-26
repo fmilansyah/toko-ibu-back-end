@@ -889,8 +889,8 @@ class Order {
     public function getListOrderSQL($status_order){
         if ($status_order == 'ALL') {
             $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
-                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order!=:status_order";
-            $result = coreReturnArray($sql, array(":status_order" => self::STATUS_ORDER_WAITING_FOR_PAYMENT));
+                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order!=:status_order AND status_order!=:status_order_cancel";
+            $result = coreReturnArray($sql, array(":status_order" => self::STATUS_ORDER_WAITING_FOR_PAYMENT, ":status_order_cancel" => self::STATUS_ORDER_CANCELLED));
         } else {
             $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
                         INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order=:status_order";
