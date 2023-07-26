@@ -1282,21 +1282,30 @@ class User {
 }
 
 class Midtrans {
-    public function createToken($userCode, $total)
+    public function createToken($orderId, $total)
     {
         $snapData = [
             'transaction_details' => [
-                'order_id' => $userCode . random_int(100000, 999999),
+                'order_id' => $orderId . date('his'),
                 'gross_amount' => $total,
             ],
         ];
         $midtrans = new MidtransApi();
         $pay = $midtrans->request(MidtransApi::TYPE_SNAP, 'POST', '/snap/v1/transactions', $snapData);
-        $response['status'] = 201;
-        $response['message'] = "Successfully Added Order To Midtrans";
-        $response['data'] = [
-            'token' => $pay['body']['token'],
-        ];
+
+        $sql = "UPDATE `order` SET `midtrans_token`=:midtrans_token WHERE `kd_order`=:kd_order";
+        $result = coreNoReturn($sql, array(":midtrans_token"=>$pay['body']['token'], ":kd_order"=>$orderId));
+        if ($result['success'] == 1) {
+            $response['status'] = 201;
+            $response['Error'] = 0;
+            $response['Message'] = "Successfully Added Order To Midtrans";
+            $response['data'] = [
+                'token' => $pay['body']['token'],
+            ];
+        } else {
+            $response['Error'] = 1;
+            $response['Message'] = "Gagal menambahkan transaksi";
+        }
         return json_encode($response);
     }
 }

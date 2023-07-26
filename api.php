@@ -474,12 +474,12 @@ function hapusKategori(){
 }
 
 function midtransCreateToken(){
-    if (isset($_POST['total']) && isset($_POST['kd_user'])) {
+    if (isset($_POST['total']) && isset($_POST['kd_order'])) {
         $total = htmlspecialchars($_POST['total']);
-        $kdUser = htmlspecialchars($_POST['kd_user']);
+        $kdOrder = htmlspecialchars($_POST['kd_order']);
 
         $midtrans = new Midtrans();
-        echo $midtrans->createToken($kdUser, $total);
+        echo $midtrans->createToken($kdOrder, $total);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";
