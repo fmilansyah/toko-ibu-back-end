@@ -22,6 +22,8 @@ require_once __DIR__ . '/helpers/Encryption.php';
 
 const STATUS_ACTIVE = 'A';
 
+$API_URL = '';
+
 $serverName = $_SERVER['SERVER_NAME'];
 if ($serverName == 'localhost') {
     // local
@@ -1078,6 +1080,7 @@ class User {
     }
 
     public function requestResetPassword($email){
+        global $API_URL;
         $sql = "SELECT * FROM user WHERE email=:email AND record_status='A'";
         $result = coreReturnArray($sql, array(":email" => $email));
     
@@ -1090,7 +1093,7 @@ class User {
             Mengatur ulang kata sandi Anda itu mudah.
             
             Klik link dibawah ini untuk membuat kata sandi baru :
-            '.$API_URL.'/reset-password?token='.Encryption::encrypt($result[0]['kd_user']).'
+            '.$API_URL.'reset-password?token='.Encryption::encrypt($result[0]['kd_user']).'
             
             Jika Anda tidak membuat permintaan ini, harap abaikan email ini.
             ';

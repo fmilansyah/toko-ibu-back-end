@@ -8,7 +8,7 @@ class MidtransApi
     const TYPE_SNAP = 'snap';
 
     private static $baseUrl;
-    private static $serverKey = 'Mid-server-f279rQqn2eSUDIyuK1OB_H3t'; // Do not commit server key
+    private static $serverKey = ''; // Do not commit server key
     private static $client;
     private static $type;
 

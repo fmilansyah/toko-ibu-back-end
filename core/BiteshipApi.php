@@ -7,7 +7,7 @@ class BiteshipApi
     const ORIGIN_AREA_ID = 'IDNP9IDNC74IDND6754IDZ16164';
 
     private static $baseUrl = 'https://api.biteship.com';
-    private static $serverKey = 'biteship_live.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9rb0lidSIsInVzZXJJZCI6IjY0YjBiZDhmYWFhOThjNzJlMzQ4NGU0ZSIsImlhdCI6MTY4OTMwODg1NH0.iG-jSPXmg5Ke6EGHQA72NhoSJxCOeyFCC9xCuxzxjwQ'; // Do not commit server key
+    private static $serverKey = ''; // Do not commit server key
     private static $client;
 
     private static function setClient($data = null)
