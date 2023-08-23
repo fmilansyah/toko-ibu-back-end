@@ -18,8 +18,11 @@ date_default_timezone_set('Asia/Jakarta');
 require_once __DIR__ . '/core/core.php';
 require_once __DIR__ . '/core/MidtransApi.php';
 require_once __DIR__ . '/core/BiteshipApi.php';
+require_once __DIR__ . '/helpers/Encryption.php';
 
 const STATUS_ACTIVE = 'A';
+
+$API_URL = '';
 
 $serverName = $_SERVER['SERVER_NAME'];
 if ($serverName == 'localhost') {
@@ -28,7 +31,7 @@ if ($serverName == 'localhost') {
     // $globalVar = $GLOBALS[$serverName];
 } else {
     // production
-    $API_URL = "//".$serverName. DIR_API_PRO;
+    $API_URL = "https://".$serverName. DIR_API_PRO;
     // $globalVar = $GLOBALS[$delSlash]; 
 }
 
@@ -213,14 +216,13 @@ class Barang{
         }
     }
 
-    public function tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile){
-
+    public function tambahDataBarangSQL($nama, $kd_kategori, $ukuran, $listFile, $deskripsi){
         $getLastId = json_decode(getLastIdTable('kd_barang', 'barang'), true);
         $lastId = $getLastId['data'];
         $kd_barang = 'B'.$lastId;
         
-        $sql = "INSERT INTO barang(kd_barang, nama, kd_kategori) VALUES(:kd_barang, :nama, :kd_kategori)";
-        $result = coreNoReturn($sql, array(":kd_barang" => $kd_barang, ":nama" => $nama, ":kd_kategori" => $kd_kategori));
+        $sql = "INSERT INTO barang(kd_barang, nama, kd_kategori, deskripsi) VALUES(:kd_barang, :nama, :kd_kategori, :deskripsi)";
+        $result = coreNoReturn($sql, array(":kd_barang" => $kd_barang, ":nama" => $nama, ":kd_kategori" => $kd_kategori, ":deskripsi" => $deskripsi));
             
         if ($result['success'] == 1) {
             
@@ -265,7 +267,7 @@ class Barang{
                     $getLastId = json_decode(getLastIdTable('kd_file', 'file_barang'), true);
                     $lastId = $getLastId['data'];
                     $kd_file = 'FB'.$lastId;
-                    
+
                     $tipe = $listFile['type'][$keyFile];
                     $fileName = date("YmdHis"). "-" .$in; 
                     $fileName = hilangSimbol($fileName);
@@ -277,7 +279,6 @@ class Barang{
                     if (!file_exists('assets/file/'.date("Y/m/d").'/')) {
                         mkdir('assets/file/'.date("Y/m/d").'/', 0777, true);
                     }    
-    
                     if ($result['success'] == 1 ) {
                         if($tipe =='application/pdf' || $tipe == 'video/mp4' || $tipe == 'video/3gpp' ||
                             $tipe == 'video/x-matroska' || $tipe == 'video/avi' || $tipe == 'video/webm' || $tipe == 'audio/mpeg'){
@@ -308,10 +309,10 @@ class Barang{
         }
     }
 
-    public function ubahDataBarangSQL($kd_barang, $nama, $kd_kategori, $ukuran, $hapus_ukuran, $hapus_file, $listFile){
+    public function ubahDataBarangSQL($kd_barang, $nama, $kd_kategori, $ukuran, $hapus_ukuran, $hapus_file, $listFile, $deskripsi){
     
-        $sql = "UPDATE `barang` SET `nama`=:nama, `kd_kategori`=:kd_kategori WHERE `kd_barang`=:kd_barang";
-        $result = coreNoReturn($sql, array(":kd_barang"=>$kd_barang, ":nama"=>$nama, ":kd_kategori"=>$kd_kategori));
+        $sql = "UPDATE `barang` SET `nama`=:nama, `kd_kategori`=:kd_kategori, `deskripsi`=:deskripsi WHERE `kd_barang`=:kd_barang";
+        $result = coreNoReturn($sql, array(":kd_barang"=>$kd_barang, ":nama"=>$nama, ":kd_kategori"=>$kd_kategori, ":deskripsi"=>$deskripsi));
             
         if ($result['success'] == 1) {
     
@@ -324,7 +325,7 @@ class Barang{
                 $sql_delete_file = "DELETE FROM file_barang WHERE `kd_file`=:kd_file";
                 $result_delete_file = coreNoReturn($sql_delete_file, array(":kd_file"=>$value));
             }
-
+            
             function getLastIdDB(){
                 $getLastId = json_decode(getLastIdTable('kd_detail_barang', 'detail_barang'), true);
                 $lastId = $getLastId['data'];
@@ -354,7 +355,6 @@ class Barang{
                     ));
                     if ($result_i_ukuran['success'] == 1) {
                         $hitung_input_ukuran++;
-                        sleep(1);
                     }
                 }
                 if($jumlah_ukuran == $hitung_input_ukuran){
@@ -397,7 +397,6 @@ class Barang{
                         }
                         
                         $hitung_upload++;
-                        sleep(1);
                     }
                 }
                 if($jumlah_i_file == $hitung_upload){
@@ -841,6 +840,7 @@ class Order {
         $getLastId = json_decode(getLastIdTable('kd_order', 'order'), true);
         $lastId = $getLastId['data'];
         $kd_order = 'O'.$lastId;
+        $midtransOrderId = $kd_order . date('his');
     
         $total_akhir = 0;
         foreach ($orders as $key => $value) {
@@ -849,7 +849,7 @@ class Order {
 
         $snapData = [
             'transaction_details' => [
-                'order_id' => $kd_order,
+                'order_id' => $midtransOrderId,
                 'gross_amount' => $total_akhir + $ongkir,
             ],
         ];
@@ -858,8 +858,8 @@ class Order {
 
         $status_pembayaran = 'MENUNGGU PEMBAYARAN';
         $status_order = self::STATUS_ORDER_WAITING_FOR_PAYMENT;
-        $sqlOrder = "INSERT INTO `order` (kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token, ongkir, kode_jasa_pengiriman) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token, :ongkir, :kode_jasa_pengiriman)";
-        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $pay['body']['token'], ":ongkir" => $ongkir, ":kode_jasa_pengiriman" => $kode_jasa_pengiriman));
+        $sqlOrder = "INSERT INTO `order` (kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token, ongkir, kode_jasa_pengiriman, midtrans_order_id) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token, :ongkir, :kode_jasa_pengiriman, :midtrans_order_id)";
+        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $pay['body']['token'], ":ongkir" => $ongkir, ":kode_jasa_pengiriman" => $kode_jasa_pengiriman, ":midtrans_order_id" => $midtransOrderId));
 
         if ($resultOrder['success'] == 1) {
     
@@ -889,8 +889,8 @@ class Order {
     public function getListOrderSQL($status_order){
         if ($status_order == 'ALL') {
             $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
-                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order!=:status_order";
-            $result = coreReturnArray($sql, array(":status_order" => self::STATUS_ORDER_WAITING_FOR_PAYMENT));
+                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order!=:status_order AND status_order!=:status_order_cancel";
+            $result = coreReturnArray($sql, array(":status_order" => self::STATUS_ORDER_WAITING_FOR_PAYMENT, ":status_order_cancel" => self::STATUS_ORDER_CANCELLED));
         } else {
             $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
                         INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order=:status_order";
@@ -1020,11 +1020,13 @@ class Order {
 
     public function getReportOrderSQL($startDate, $endDate, $returnData = false){
         $sqlOrder = 'SELECT dor.kd_detail_barang, SUM(dor.jumlah_barang) AS total_qty, SUM(dor.total_harga) AS total_harga, db.varian, db.harga, b.kd_barang, b.nama
-                     FROM `detail_order` dor
-                     INNER JOIN detail_barang db ON db.kd_detail_barang = dor.kd_detail_barang
-                     INNER JOIN barang b ON b.kd_barang = db.kd_barang
-                     WHERE dor.created_at BETWEEN "'.$startDate.' 00:00:00" AND "'.$endDate.' 23:59:59"
-                     GROUP BY dor.kd_detail_barang';
+                    FROM `detail_order` dor
+                    INNER JOIN detail_barang db ON db.kd_detail_barang = dor.kd_detail_barang
+                    INNER JOIN barang b ON b.kd_barang = db.kd_barang
+                    WHERE dor.kd_order IN(SELECT kd_order FROM `order`
+                        WHERE created_at BETWEEN "'.$startDate.' 00:00:00" AND "'.$endDate.' 23:59:59"
+                        AND status_order = "'.self::STATUS_ORDER_FINISHED.'")
+                    GROUP BY dor.kd_detail_barang';
         $resultOrder = coreReturnArray($sqlOrder, null);
 
         if (sizeof($resultOrder) > 0) {
@@ -1078,19 +1080,56 @@ class User {
     }
 
     public function requestResetPassword($email){
+        global $API_URL;
         $sql = "SELECT * FROM user WHERE email=:email AND record_status='A'";
         $result = coreReturnArray($sql, array(":email" => $email));
     
         if (sizeof($result) > 0) {
-            $response['Error'] = 0;
-            $response['User'] = $result[0];
-            $response['Message'] = 'Silakan periksa kotak masuk email anda';
-            return json_encode($response);
+            $to_email = $email;
+            $subject = "Ubah Kata Sandi - Toko Ibu";
+            $body = '
+            Ada masalah saat masuk?
+            
+            Mengatur ulang kata sandi Anda itu mudah.
+            
+            Klik link dibawah ini untuk membuat kata sandi baru :
+            '.$API_URL.'reset-password?token='.Encryption::encrypt($result[0]['kd_user']).'
+            
+            Jika Anda tidak membuat permintaan ini, harap abaikan email ini.
+            ';
+
+            if (mail($to_email, $subject, $body)) {
+                $response['Error'] = 0;
+                $response['User'] = $result[0];
+                $response['Message'] = 'Silakan periksa kotak masuk email anda';
+                return json_encode($response);
+            } else {
+                $response['Error'] = 0;
+                $response['User'] = $result[0];
+                $response['Message'] = 'Gagal mengirimkan email';
+                return json_encode($response);
+            }
         } else {
             $response['Error'] = 1;
             $response['Message'] = 'Email Tidak Ditemukan';
             return json_encode($response);
         }
+    }
+    
+    public function resetPassword($token, $password){
+        $kdUser = Encryption::decrypt($token);
+        $sql = "UPDATE `user` SET `password`=:password WHERE `kd_user`=:kd_user";
+        $result = coreNoReturn($sql, array(":kd_user"=>$kdUser, ":password"=>md5($password)));
+    
+        if ($result['success'] == 1) {
+            $response['Error'] = 0;
+            $response['Message'] = 'Kata Sandi Berhasil Diganti';
+            return json_encode($response);
+        }
+
+        $response['Error'] = 1;
+        $response['Message'] = 'Gagal Mengganti Kata Sandi';
+        return json_encode($response);
     }
 
     public function detailUser($kd_user){
@@ -1232,7 +1271,7 @@ class User {
     
         if (sizeof($result) > 0) {
             $sql = "UPDATE `user` SET `password`=:password WHERE `kd_user`=:kd_user";
-            $result = coreNoReturn($sql, array(":kd_user"=>$kdUser, ":password"=>$newPassword));
+            $result = coreNoReturn($sql, array(":kd_user"=>$kdUser, ":password"=>md5($newPassword)));
 
             if ($result['success'] == 1) {
                 $response['Error'] = 0;
@@ -1252,21 +1291,30 @@ class User {
 }
 
 class Midtrans {
-    public function createToken($userCode, $total)
+    public function createToken($orderId, $total)
     {
         $snapData = [
             'transaction_details' => [
-                'order_id' => $userCode . random_int(100000, 999999),
+                'order_id' => $orderId . date('his'),
                 'gross_amount' => $total,
             ],
         ];
         $midtrans = new MidtransApi();
         $pay = $midtrans->request(MidtransApi::TYPE_SNAP, 'POST', '/snap/v1/transactions', $snapData);
-        $response['status'] = 201;
-        $response['message'] = "Successfully Added Order To Midtrans";
-        $response['data'] = [
-            'token' => $pay['body']['token'],
-        ];
+
+        $sql = "UPDATE `order` SET `midtrans_token`=:midtrans_token WHERE `kd_order`=:kd_order";
+        $result = coreNoReturn($sql, array(":midtrans_token"=>$pay['body']['token'], ":kd_order"=>$orderId));
+        if ($result['success'] == 1) {
+            $response['status'] = 201;
+            $response['Error'] = 0;
+            $response['Message'] = "Successfully Added Order To Midtrans";
+            $response['data'] = [
+                'token' => $pay['body']['token'],
+            ];
+        } else {
+            $response['Error'] = 1;
+            $response['Message'] = "Gagal menambahkan transaksi";
+        }
         return json_encode($response);
     }
 }

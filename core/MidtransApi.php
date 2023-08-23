@@ -30,11 +30,11 @@ class MidtransApi
     private static function getBaseUrl()
     {
         if (self::$type === self::TYPE_API) {
-            self::$baseUrl = 'https://api.sandbox.midtrans.com';
+            self::$baseUrl = 'https://api.midtrans.com';
         }
 
         if (self::$type === self::TYPE_SNAP) {
-            self::$baseUrl = 'https://app.sandbox.midtrans.com';
+            self::$baseUrl = 'https://app.midtrans.com';
         }
     }
 

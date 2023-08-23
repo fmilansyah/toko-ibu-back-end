@@ -50,6 +50,7 @@ Flight::route('GET /list-user', 'listUser');
 Flight::route('GET /detail-user', 'detailUser');
 Flight::route('POST /change-user-password', 'changeUserPassword');
 Flight::route('POST /requestresetpassword', 'requestResetPassword');
+Flight::route('POST /resetpassword', 'resetpassword');
 
 // ----------------- KERANJANG
 Flight::route('POST /getdatakeranjang', 'getDataKeranjang');
