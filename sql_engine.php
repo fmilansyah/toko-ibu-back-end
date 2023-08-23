@@ -1140,6 +1140,15 @@ class User {
     }
     
     public function ubahUserSQL($kd_user, $nama, $no_telepon, $email, $alamat, $kode_pos, $foto_profil, $biteship_area_id){
+
+        $SQLcekNoDuplicate = "SELECT * FROM `user` WHERE no_telepon=:no_telepon AND kd_user!=:kd_user";
+        $resultNoDuplicate = coreReturnArray($SQLcekNoDuplicate, array(":no_telepon" => $no_telepon, ":kd_user" => $kd_user));
+        if (sizeof($resultNoDuplicate) > 0) {
+            $response['Error'] = 1;
+            $response['Message'] = "Nomor Telepon Telah Terdaftar!";
+            return json_encode($response);
+        }
+
         if($foto_profil == false){
             $sql = "UPDATE `user` SET `nama`=:nama, 
                                         `email`=:email,
