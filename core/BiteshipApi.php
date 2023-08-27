@@ -4,7 +4,7 @@ use GuzzleHttp\Client;
 
 class BiteshipApi
 {
-    const ORIGIN_AREA_ID = 'IDNP9IDNC74IDND6754IDZ16164';
+    const ORIGIN_AREA_ID = '';
 
     private static $baseUrl = 'https://api.biteship.com';
     private static $serverKey = ''; // Do not commit server key

@@ -18,8 +18,9 @@ require_once __DIR__ . '/sql_engine.php';
 
 function getDataBarang(){
     $nama = isset($_GET['nama']) ? $_GET['nama'] : null;
+    $kd_kategori = isset($_GET['kd_kategori']) ? $_GET['kd_kategori'] : null;
     $barang = new Barang();
-    echo $barang->getDataBarangSQL($nama);
+    echo $barang->getDataBarangSQL($nama, $kd_kategori);
 }
 
 function getBarangTerbaru(){
@@ -92,9 +93,11 @@ function tambahDataBarang(){
 function getListOrder(){
     if (isset($_POST['status_order'])) {
         $status_order = htmlspecialchars($_POST['status_order']);
+        $startDate = isset($_POST['start_date']) && !empty($_POST['start_date']) ? htmlspecialchars($_POST['start_date']) : date('Y-m-d');
+        $endDate = isset($_POST['end_date']) && !empty($_POST['end_date']) ? htmlspecialchars($_POST['end_date']) : date('Y-m-d');
 
         $order = new Order();
-        echo $order->getListOrderSQL($status_order);
+        echo $order->getListOrderSQL($status_order, $startDate, $endDate);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";

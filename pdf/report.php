@@ -28,7 +28,7 @@ foreach ($data as $i => $o) {
 $tableBody .= '
 <tr>
     <td style="font-weight: bold;" colSpan="4">Total</td>
-    <td style="text-align: right; font-weigh: bold;">Rp. '.number_format($o['total_harga']).'</td>
+    <td style="text-align: right; font-weigh: bold;">Rp. '.number_format($total).'</td>
 </tr>
 ';
 
