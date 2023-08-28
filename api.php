@@ -140,10 +140,11 @@ function getDetailOrder(){
 }
 
 function orderBarang(){
-    if (isset($_POST['kd_user'], $_POST['orders'], $_POST['jenis_order'], $_POST['jasa_pengiriman'], $_POST['jenis_pengiriman'])) {
+    if (isset($_POST['kd_user'], $_POST['o'], $_POST['jenis_order'], $_POST['jasa_pengiriman'], $_POST['jenis_pengiriman'])) {
         $kd_user = htmlspecialchars($_POST['kd_user']);
         $jenis_order = htmlspecialchars($_POST['jenis_order']);
-        $orders = json_decode($_POST['orders'], true);
+        // $orders = (array) json_decode($_POST['orders'], true);
+        $o = json_decode($_POST['o'], true);
         $ongkir = htmlspecialchars($_POST['ongkir']);
 
         $jasa_pengiriman = htmlspecialchars($_POST['jasa_pengiriman']);
@@ -153,7 +154,7 @@ function orderBarang(){
         $midtrans_token = isset($_POST['midtrans_token']) ? htmlspecialchars($_POST['midtrans_token']) : null;
 
         $order = new Order();
-        echo $order->orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token, $ongkir, $kode_jasa_pengiriman);
+        echo $order->orderBarangSQL($kd_user, $jenis_order, $o, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token, $ongkir, $kode_jasa_pengiriman);
     } else {
         $response["Error"] = 1;
         $response["Message"] = "1102|required field is missing";

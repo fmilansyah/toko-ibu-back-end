@@ -786,8 +786,11 @@ class Order {
 
     public function kirimBarangSQL($kd_order, $no_resi){
         $status_order = self::STATUS_ORDER_DELIVERY;
-        $sql = "UPDATE `order` db SET `no_resi`=:no_resi, status_order=:status_order WHERE `kd_order`=:kd_order";
+        $sql = "UPDATE `pesanan` db SET `no_resi`=:no_resi, status_order=:status_order WHERE `kd_order`=:kd_order";
         $result = coreNoReturn($sql, array(":no_resi"=>$no_resi, ":status_order"=>$status_order, ":kd_order"=>$kd_order));
+
+        // $sql = "UPDATE `order` db SET `no_resi`=:no_resi, status_order=:status_order WHERE `kd_order`=:kd_order";
+        // $result = coreNoReturn($sql, array(":no_resi"=>$no_resi, ":status_order"=>$status_order, ":kd_order"=>$kd_order));
     
         if ($result['success'] == 1) {
             $response['Error'] = 0;
@@ -802,8 +805,11 @@ class Order {
     
     public function selesaiOrderSQL($kd_order){
         $status_order = self::STATUS_ORDER_PROCESS;
-        $sql = "UPDATE `order` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
+        $sql = "UPDATE `pesanan` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
         $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
+
+        // $sql = "UPDATE `order` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
+        // $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
     
         if ($result['success'] == 1) {
             $response['Error'] = 0;
@@ -818,11 +824,17 @@ class Order {
 
     public function updateStatusOrderSQL($kd_order, $status_order){
         if ($status_order === self::STATUS_ORDER_WAITING_FOR_CONFIRMATION) {
-            $sql = "UPDATE `order` db SET status_order=:status_order, status_pembayaran=:status_pembayaran WHERE `kd_order`=:kd_order";
+            $sql = "UPDATE `pesanan` db SET status_order=:status_order, status_pembayaran=:status_pembayaran WHERE `kd_order`=:kd_order";
             $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order, ":status_pembayaran" => 'LUNAS'));
+
+            // $sql = "UPDATE `order` db SET status_order=:status_order, status_pembayaran=:status_pembayaran WHERE `kd_order`=:kd_order";
+            // $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order, ":status_pembayaran" => 'LUNAS'));
         } else {
-            $sql = "UPDATE `order` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
+            $sql = "UPDATE `pesanan` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
             $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
+
+            // $sql = "UPDATE `order` db SET status_order=:status_order WHERE `kd_order`=:kd_order";
+            // $result = coreNoReturn($sql, array(":status_order"=>$status_order, ":kd_order"=>$kd_order));
         }
     
         if ($result['success'] == 1) {
@@ -837,7 +849,7 @@ class Order {
     }
 
     public function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token = null, $ongkir, $kode_jasa_pengiriman){
-        $getLastId = json_decode(getLastIdTable('kd_order', 'order'), true);
+        $getLastId = json_decode(getLastIdTable('kd_order', 'pesanan'), true);
         $lastId = $getLastId['data'];
         $kd_order = 'O'.$lastId;
         $midtransOrderId = $kd_order . date('his');
@@ -858,21 +870,36 @@ class Order {
 
         $status_pembayaran = 'MENUNGGU PEMBAYARAN';
         $status_order = self::STATUS_ORDER_WAITING_FOR_PAYMENT;
-        $sqlOrder = "INSERT INTO `order` (kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token, ongkir, kode_jasa_pengiriman, midtrans_order_id) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token, :ongkir, :kode_jasa_pengiriman, :midtrans_order_id)";
-        $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $pay['body']['token'], ":ongkir" => $ongkir, ":kode_jasa_pengiriman" => $kode_jasa_pengiriman, ":midtrans_order_id" => $midtransOrderId));
 
-        if ($resultOrder['success'] == 1) {
-    
-            foreach ($orders as $key => $value) {
-                $sqlOrderDetail = "INSERT INTO detail_order(kd_order, kd_detail_barang, jumlah_barang, total_harga) VALUES(:kd_order, :kd_detail_barang, :jumlah_barang, :total_harga)";
-                $resultOrderDetail = coreNoReturn($sqlOrderDetail, array(":kd_order" => $kd_order, ":kd_detail_barang" => $value['kd_detail_barang'], ":jumlah_barang" => $value['jumlah_barang'], ":total_harga" => $value['harga_total']));            
-    
-                if($jenis_order == 'keranjang'){
-                    $keranjang = new Keranjang();
-                    $cobaHapusKeranjang = json_decode($keranjang->hapusKeranjangOrder($value['kd_detail_barang'], $kd_user));
-                }
+        $jumlah_data_input = sizeof($orders);
+        $hitung_data_input = 0;
+        $response['jumlah_data_input'] = $jumlah_data_input;
+        foreach ($orders as $key => $value) {
+            $tambah = "INSERT INTO `pesanan` (kd_order, kd_user, kd_detail_barang, jumlah_barang, tanggal_pembayaran, status_pembayaran, 
+                                                    jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token, midtrans_order_id,
+                                                    ongkir, kode_jasa_pengiriman, total_akhir) 
+                                    VALUES(:kd_order, :kd_user, :kd_detail_barang, :jumlah_barang, CURRENT_TIMESTAMP, :status_pembayaran, 
+                                            :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token, :midtrans_order_id,
+                                            :ongkir, :kode_jasa_pengiriman, :total_akhir)";
+            $res = coreNoReturn($tambah, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":kd_detail_barang" => $value['kd_detail_barang'], 
+                                                            ":jumlah_barang" => $value['jumlah_barang'],":status_pembayaran" => $status_pembayaran, 
+                                                            ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman,
+                                                            ":status_order" => $status_order, ":midtrans_token" => $pay, 
+                                                            ":midtrans_order_id" => $midtransOrderId, ":ongkir" => $ongkir, 
+                                                            ":kode_jasa_pengiriman" => $kode_jasa_pengiriman, ":total_akhir" => $total_akhir));    
+            if ($res['success'] == 1) {
+                $hitung_data_input++;
             }
-    
+
+            if($jenis_order == 'keranjang'){
+                $keranjang = new Keranjang();
+                $cobaHapusKeranjang = json_decode($keranjang->hapusKeranjangOrder($value['kd_detail_barang'], $kd_user));
+            }
+        }
+
+        $response['hitung_data_input'] = $hitung_data_input;
+
+        if ($hitung_data_input == $jumlah_data_input) {
             $response['Error'] = 0;
             $response['kd_order'] = $kd_order;
             $response['token'] = $pay['body']['token'];
@@ -886,14 +913,70 @@ class Order {
         }
     }
 
+    // public function orderBarangSQL($kd_user, $jenis_order, $orders, $jasa_pengiriman, $jenis_pengiriman, $midtrans_token = null, $ongkir, $kode_jasa_pengiriman){
+    //     $getLastId = json_decode(getLastIdTable('kd_order', 'order'), true);
+    //     $lastId = $getLastId['data'];
+    //     $kd_order = 'O'.$lastId;
+    //     $midtransOrderId = $kd_order . date('his');
+    
+    //     $total_akhir = 0;
+    //     foreach ($orders as $key => $value) {
+    //         $total_akhir += $value['harga_total'];
+    //     }
+
+    //     $snapData = [
+    //         'transaction_details' => [
+    //             'order_id' => $midtransOrderId,
+    //             'gross_amount' => $total_akhir + $ongkir,
+    //         ],
+    //     ];
+    //     $midtrans = new MidtransApi();
+    //     $pay = $midtrans->request(MidtransApi::TYPE_SNAP, 'POST', '/snap/v1/transactions', $snapData);
+
+    //     $status_pembayaran = 'MENUNGGU PEMBAYARAN';
+    //     $status_order = self::STATUS_ORDER_WAITING_FOR_PAYMENT;
+    //     $sqlOrder = "INSERT INTO `order` (kd_order, kd_user, total_akhir, tanggal_pembayaran, status_pembayaran, jasa_pengiriman, jenis_pengiriman, status_order, midtrans_token, ongkir, kode_jasa_pengiriman, midtrans_order_id) VALUES(:kd_order, :kd_user, :total_akhir, CURRENT_TIMESTAMP, :status_pembayaran, :jasa_pengiriman, :jenis_pengiriman, :status_order, :midtrans_token, :ongkir, :kode_jasa_pengiriman, :midtrans_order_id)";
+    //     $resultOrder = coreNoReturn($sqlOrder, array(":kd_order" => $kd_order, ":kd_user" => $kd_user, ":total_akhir" => $total_akhir, ":status_pembayaran" => $status_pembayaran, ":jasa_pengiriman" => $jasa_pengiriman, ":jenis_pengiriman" => $jenis_pengiriman, ":status_order" => $status_order, ":midtrans_token" => $pay, ":ongkir" => $ongkir, ":kode_jasa_pengiriman" => $kode_jasa_pengiriman, ":midtrans_order_id" => $midtransOrderId));
+
+    //     if ($resultOrder['success'] == 1) {
+    
+    //         foreach ($orders as $key => $value) {
+    //             $sqlOrderDetail = "INSERT INTO detail_order(kd_order, kd_detail_barang, jumlah_barang, total_harga) VALUES(:kd_order, :kd_detail_barang, :jumlah_barang, :total_harga)";
+    //             $resultOrderDetail = coreNoReturn($sqlOrderDetail, array(":kd_order" => $kd_order, ":kd_detail_barang" => $value['kd_detail_barang'], ":jumlah_barang" => $value['jumlah_barang'], ":total_harga" => $value['harga_total']));            
+    
+    //             if($jenis_order == 'keranjang'){
+    //                 $keranjang = new Keranjang();
+    //                 $cobaHapusKeranjang = json_decode($keranjang->hapusKeranjangOrder($value['kd_detail_barang'], $kd_user));
+    //             }
+    //         }
+    
+    //         $response['Error'] = 0;
+    //         $response['kd_order'] = $kd_order;
+    //         $response['token'] = $pay['body']['token'];
+    //         $jenis_order == 'keranjang' ? $response['cobaHapusKeranjang'] = $cobaHapusKeranjang : '';
+    //         $response['Message'] = "Berhasil Order Barang!";
+    //         return json_encode($response);
+    //     } else {
+    //         $response['Error'] = 1;
+    //         $response['Message'] = "Gagal Order Barang!";
+    //         return json_encode($response);
+    //     }
+    // }
+
     public function getListOrderSQL($status_order){
         if ($status_order == 'ALL') {
-            $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
-                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order!=:status_order AND status_order!=:status_order_cancel";
+            // $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
+            //             INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order!=:status_order AND status_order!=:status_order_cancel";
+
+            $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `pesanan` o 
+                       INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order!=:status_order AND status_order!=:status_order_cancel GROUP BY o.kd_order";
             $result = coreReturnArray($sql, array(":status_order" => self::STATUS_ORDER_WAITING_FOR_PAYMENT, ":status_order_cancel" => self::STATUS_ORDER_CANCELLED));
         } else {
-            $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
-                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order=:status_order";
+            // $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `order` o 
+            //             INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order=:status_order";
+
+            $sql = "SELECT o.*, u.nama, u.alamat, u.no_telepon, u.kode_pos FROM `pesanan` o 
+                        INNER JOIN user u ON o.kd_user=u.kd_user WHERE status_order=:status_order  GROUP BY o.kd_order";
             $result = coreReturnArray($sql, array(":status_order" => $status_order));
         }
 
@@ -942,7 +1025,10 @@ class Order {
     }
 
     public function getDetailOrderSQL($kd_order){
-        $sql = "SELECT o.*, u.nama AS nama_user, u.alamat, u.no_telepon, u.kode_pos FROM `order` o INNER JOIN user u ON o.kd_user=u.kd_user WHERE o.kd_order=:kd_order";
+        $sql = "SELECT o.*, u.nama AS nama_user, u.alamat, u.no_telepon, u.kode_pos 
+                    FROM (SELECT * FROM pesanan WHERE kd_order=:kd_order GROUP BY kd_order)  o 
+                    INNER JOIN user u ON o.kd_user=u.kd_user 
+                    WHERE o.kd_order=:kd_order";
         $result = coreReturnArray($sql, array(":kd_order" => $kd_order));
 
         if (sizeof($result) > 0) {
@@ -974,6 +1060,40 @@ class Order {
             return json_encode($response);
         }
     }
+
+        // public function getDetailOrderSQL($kd_order){
+        //     $sql = "SELECT o.*, u.nama AS nama_user, u.alamat, u.no_telepon, u.kode_pos FROM `order` o INNER JOIN user u ON o.kd_user=u.kd_user WHERE o.kd_order=:kd_order";
+        //     $result = coreReturnArray($sql, array(":kd_order" => $kd_order));
+
+        //     if (sizeof($result) > 0) {
+        //         $result = $result[0];
+        //         $sqlDetailOrder = "SELECT dor.*, db.varian, db.harga, db.berat_satuan, b.nama AS nama_barang, b.kd_barang FROM detail_order dor
+        //                         INNER JOIN detail_barang db ON dor.kd_detail_barang=db.kd_detail_barang
+        //                         INNER JOIN barang b ON b.kd_barang=db.kd_barang WHERE dor.kd_order=:kd_order";
+        //         $resultDetailOrder = coreReturnArray($sqlDetailOrder, array(":kd_order" => $kd_order));
+
+        //         if (sizeof($resultDetailOrder) > 0) {
+        //             foreach($resultDetailOrder as $key => $val) {
+        //                 $fileBarang = "SELECT * FROM `file_barang` WHERE kd_barang=:kd_barang ORDER BY created_at ASC";
+        //                 $resultFileBarang = coreReturnArray($fileBarang, array(":kd_barang" => $val['kd_barang']));
+
+        //                 if (sizeof($resultFileBarang) > 0) {
+        //                     $resultDetailOrder[$key]['file'] = $resultFileBarang[0]['file'];
+        //                 }
+        //             }
+        //             $result['detail_order'] = $resultDetailOrder;
+        //         }
+
+        //         $response['Order'] = $result;
+        //         $response['Error'] = 0;
+        //         $response['Message'] = 'Data Berhasil Ditemukan!';
+        //         return json_encode($response);
+        //     } else {
+        //         $response['Error'] = 1;
+        //         $response['Message'] = 'Data Tidak Ditemukan!';
+        //         return json_encode($response);
+        //     }
+        // }
 
     public function getUserOrderSQL($kd_user){
         $sqlOrder = 'SELECT kd_order, created_at, total_akhir, status_order FROM `order` WHERE kd_user=:kd_user ORDER BY created_at DESC';
