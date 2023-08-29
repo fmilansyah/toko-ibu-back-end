@@ -44,3 +44,6 @@ ALTER TABLE `order` ADD COLUMN `midtrans_token` varchar(255) NULL AFTER `created
 ALTER TABLE `order` ADD COLUMN `ongkir` int(10) NULL AFTER `midtrans_token`;
 ALTER TABLE `user` ADD COLUMN `biteship_area_id` varchar(200) NULL DEFAULT NULL AFTER `created_at`;
 ALTER TABLE `order` ADD COLUMN `kode_jasa_pengiriman` varchar(10) CHARACTER SET utf16le NULL AFTER `ongkir`;
+
+8/29/2023
+add pesanan.sql
